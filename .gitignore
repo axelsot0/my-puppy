@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Env files
+.env
+.env.*
+
+# Dependency / build caches
+node_modules/
+dist/
+build/
+coverage/
+__pycache__/
+*.py[cod]
