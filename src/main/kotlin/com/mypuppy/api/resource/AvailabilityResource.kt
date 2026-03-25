@@ -3,20 +3,23 @@ package com.mypuppy.api.resource
 import com.mypuppy.application.dto.CreateAvailabilityRequest
 import com.mypuppy.application.dto.toResponse
 import com.mypuppy.application.service.AvailabilityService
+import jakarta.annotation.security.RolesAllowed
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+import java.util.UUID
 
 @Path("/api/availabilities")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@RolesAllowed("ADMIN", "EMPLOYEE")
 class AvailabilityResource(
     private val availabilityService: AvailabilityService
 ) {
 
     @GET
     @Path("/employee/{employeeId}")
-    fun listByEmployee(@PathParam("employeeId") employeeId: Long): Response {
+    fun listByEmployee(@PathParam("employeeId") employeeId: UUID): Response {
         val availabilities = availabilityService.findByEmployeeId(employeeId)
             .map { it.toResponse() }
         return Response.ok(availabilities).build()
@@ -36,7 +39,7 @@ class AvailabilityResource(
 
     @DELETE
     @Path("/{id}")
-    fun delete(@PathParam("id") id: Long): Response {
+    fun delete(@PathParam("id") id: UUID): Response {
         availabilityService.delete(id)
         return Response.noContent().build()
     }

@@ -3,21 +3,27 @@ package com.mypuppy.api.resource
 import com.mypuppy.application.dto.BookAppointmentRequest
 import com.mypuppy.application.dto.toResponse
 import com.mypuppy.application.service.AppointmentService
+import com.mypuppy.infrastructure.tenant.TenantContext
+import jakarta.annotation.security.RolesAllowed
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import java.time.LocalDate
+import java.util.UUID
 
 @Path("/api/appointments")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 class AppointmentResource(
-    private val appointmentService: AppointmentService
+    private val appointmentService: AppointmentService,
+    private val tenantContext: TenantContext
 ) {
 
     @GET
-    @Path("/client/{clientId}")
-    fun listByClient(@PathParam("clientId") clientId: Long): Response {
+    @Path("/mine")
+    @RolesAllowed("CLIENT")
+    fun listMyAppointments(): Response {
+        val clientId = tenantContext.requireUserId()
         val appointments = appointmentService.findByClientId(clientId)
             .map { it.toResponse() }
         return Response.ok(appointments).build()
@@ -25,8 +31,9 @@ class AppointmentResource(
 
     @GET
     @Path("/employee/{employeeId}")
+    @RolesAllowed("ADMIN", "EMPLOYEE")
     fun listByEmployee(
-        @PathParam("employeeId") employeeId: Long,
+        @PathParam("employeeId") employeeId: UUID,
         @QueryParam("date") date: LocalDate?
     ): Response {
         val effectiveDate = date ?: LocalDate.now()
@@ -37,13 +44,17 @@ class AppointmentResource(
 
     @GET
     @Path("/{id}")
-    fun findById(@PathParam("id") id: Long): Response {
+    @RolesAllowed("CLIENT", "ADMIN", "EMPLOYEE")
+    fun findById(@PathParam("id") id: UUID): Response {
         val appointment = appointmentService.findById(id).toResponse()
         return Response.ok(appointment).build()
     }
 
     @POST
-    fun book(request: BookAppointmentRequest, @HeaderParam("X-User-Id") clientId: Long): Response {
+    @RolesAllowed("CLIENT")
+    fun book(request: BookAppointmentRequest): Response {
+        val clientId = tenantContext.requireUserId()
+
         val appointment = appointmentService.book(
             clientId = clientId,
             serviceId = request.serviceId,
@@ -58,9 +69,10 @@ class AppointmentResource(
 
     @PUT
     @Path("/{id}/assign/{employeeId}")
+    @RolesAllowed("ADMIN")
     fun assignEmployee(
-        @PathParam("id") id: Long,
-        @PathParam("employeeId") employeeId: Long
+        @PathParam("id") id: UUID,
+        @PathParam("employeeId") employeeId: UUID
     ): Response {
         val appointment = appointmentService.assignEmployee(id, employeeId).toResponse()
         return Response.ok(appointment).build()
@@ -68,21 +80,24 @@ class AppointmentResource(
 
     @PUT
     @Path("/{id}/done")
-    fun markDone(@PathParam("id") id: Long): Response {
+    @RolesAllowed("ADMIN", "EMPLOYEE")
+    fun markDone(@PathParam("id") id: UUID): Response {
         val appointment = appointmentService.markDone(id).toResponse()
         return Response.ok(appointment).build()
     }
 
     @PUT
     @Path("/{id}/reject")
-    fun reject(@PathParam("id") id: Long): Response {
+    @RolesAllowed("ADMIN")
+    fun reject(@PathParam("id") id: UUID): Response {
         val appointment = appointmentService.reject(id).toResponse()
         return Response.ok(appointment).build()
     }
 
     @PUT
     @Path("/{id}/cancel")
-    fun cancel(@PathParam("id") id: Long): Response {
+    @RolesAllowed("CLIENT", "ADMIN")
+    fun cancel(@PathParam("id") id: UUID): Response {
         val appointment = appointmentService.cancel(id).toResponse()
         return Response.ok(appointment).build()
     }

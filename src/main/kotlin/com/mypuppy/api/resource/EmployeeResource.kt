@@ -6,13 +6,16 @@ import com.mypuppy.application.service.EmployeeServiceService
 import com.mypuppy.application.service.UserService
 import com.mypuppy.domain.model.Role
 import com.mypuppy.infrastructure.tenant.TenantContext
+import jakarta.annotation.security.RolesAllowed
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+import java.util.UUID
 
 @Path("/api/employees")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@RolesAllowed("ADMIN")
 class EmployeeResource(
     private val userService: UserService,
     private val employeeServiceService: EmployeeServiceService,
@@ -48,8 +51,8 @@ class EmployeeResource(
     @POST
     @Path("/{employeeId}/services/{serviceId}")
     fun assignService(
-        @PathParam("employeeId") employeeId: Long,
-        @PathParam("serviceId") serviceId: Long
+        @PathParam("employeeId") employeeId: UUID,
+        @PathParam("serviceId") serviceId: UUID
     ): Response {
         employeeServiceService.assign(employeeId, serviceId)
         return Response.noContent().build()
@@ -58,8 +61,8 @@ class EmployeeResource(
     @DELETE
     @Path("/{employeeId}/services/{serviceId}")
     fun removeService(
-        @PathParam("employeeId") employeeId: Long,
-        @PathParam("serviceId") serviceId: Long
+        @PathParam("employeeId") employeeId: UUID,
+        @PathParam("serviceId") serviceId: UUID
     ): Response {
         employeeServiceService.remove(employeeId, serviceId)
         return Response.noContent().build()
@@ -67,7 +70,7 @@ class EmployeeResource(
 
     @DELETE
     @Path("/{id}")
-    fun deactivate(@PathParam("id") id: Long): Response {
+    fun deactivate(@PathParam("id") id: UUID): Response {
         userService.deactivate(id)
         return Response.noContent().build()
     }

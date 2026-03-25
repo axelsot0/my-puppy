@@ -5,9 +5,12 @@ import com.mypuppy.application.dto.UpdateServiceRequest
 import com.mypuppy.application.dto.toResponse
 import com.mypuppy.application.service.ServiceService
 import com.mypuppy.infrastructure.tenant.TenantContext
+import jakarta.annotation.security.PermitAll
+import jakarta.annotation.security.RolesAllowed
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+import java.util.UUID
 
 @Path("/api/services")
 @Produces(MediaType.APPLICATION_JSON)
@@ -18,6 +21,7 @@ class ServiceResource(
 ) {
 
     @GET
+    @PermitAll
     fun list(): Response {
         val businessId = tenantContext.requireBusinessId()
         val services = serviceService.findByBusinessId(businessId).map { it.toResponse() }
@@ -26,12 +30,14 @@ class ServiceResource(
 
     @GET
     @Path("/{id}")
-    fun findById(@PathParam("id") id: Long): Response {
+    @PermitAll
+    fun findById(@PathParam("id") id: UUID): Response {
         val service = serviceService.findById(id).toResponse()
         return Response.ok(service).build()
     }
 
     @POST
+    @RolesAllowed("ADMIN")
     fun create(request: CreateServiceRequest): Response {
         val businessId = tenantContext.requireBusinessId()
 
@@ -48,7 +54,8 @@ class ServiceResource(
 
     @PUT
     @Path("/{id}")
-    fun update(@PathParam("id") id: Long, request: UpdateServiceRequest): Response {
+    @RolesAllowed("ADMIN")
+    fun update(@PathParam("id") id: UUID, request: UpdateServiceRequest): Response {
         val service = serviceService.update(
             id = id,
             name = request.name,
@@ -62,7 +69,8 @@ class ServiceResource(
 
     @DELETE
     @Path("/{id}")
-    fun deactivate(@PathParam("id") id: Long): Response {
+    @RolesAllowed("ADMIN")
+    fun deactivate(@PathParam("id") id: UUID): Response {
         serviceService.deactivate(id)
         return Response.noContent().build()
     }
