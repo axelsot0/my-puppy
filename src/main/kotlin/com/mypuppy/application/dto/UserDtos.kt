@@ -2,6 +2,7 @@ package com.mypuppy.application.dto
 
 import com.mypuppy.domain.model.AuthProvider
 import com.mypuppy.domain.model.Role
+import java.util.UUID
 
 data class RegisterRequest(
     val email: String,
@@ -12,8 +13,18 @@ data class RegisterRequest(
     val providerId: String? = null
 )
 
+data class LoginRequest(
+    val email: String,
+    val password: String
+)
+
+data class AuthResponse(
+    val token: String,
+    val user: UserResponse
+)
+
 data class UserResponse(
-    val id: Long,
+    val id: UUID,
     val email: String,
     val firstName: String,
     val lastName: String,

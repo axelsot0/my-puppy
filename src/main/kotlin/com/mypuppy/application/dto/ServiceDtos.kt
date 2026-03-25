@@ -1,6 +1,7 @@
 package com.mypuppy.application.dto
 
 import java.math.BigDecimal
+import java.util.UUID
 
 data class CreateServiceRequest(
     val name: String,
@@ -10,7 +11,7 @@ data class CreateServiceRequest(
 )
 
 data class ServiceResponse(
-    val id: Long,
+    val id: UUID,
     val name: String,
     val description: String?,
     val price: BigDecimal,

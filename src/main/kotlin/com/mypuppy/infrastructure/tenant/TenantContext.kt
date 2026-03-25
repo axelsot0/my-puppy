@@ -1,27 +1,32 @@
 package com.mypuppy.infrastructure.tenant
 
 import com.mypuppy.domain.exception.UnauthorizedException
-import com.mypuppy.domain.model.Business
-import com.mypuppy.domain.repository.BusinessRepository
 import jakarta.enterprise.context.RequestScoped
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
 import jakarta.ws.rs.ext.Provider
+import org.eclipse.microprofile.jwt.JsonWebToken
+import java.util.UUID
 
 @RequestScoped
 class TenantContext {
 
-    var businessId: Long? = null
+    var businessId: UUID? = null
+    var userId: UUID? = null
 
-    fun requireBusinessId(): Long {
+    fun requireBusinessId(): UUID {
         return businessId ?: throw UnauthorizedException("Missing tenant identifier")
+    }
+
+    fun requireUserId(): UUID {
+        return userId ?: throw UnauthorizedException("Authentication required")
     }
 }
 
 @Provider
 class TenantFilter(
     private val tenantContext: TenantContext,
-    private val businessRepository: BusinessRepository
+    private val jwt: JsonWebToken
 ) : ContainerRequestFilter {
 
     companion object {
@@ -31,21 +36,24 @@ class TenantFilter(
     override fun filter(requestContext: ContainerRequestContext) {
         val path = requestContext.uriInfo.path
 
-        if (path.startsWith("platform") || path.startsWith("q/")) {
+        if (path.startsWith("platform") || path.startsWith("q/") || path.contains("auth")) {
             return
         }
 
-        val tenantHeader = requestContext.getHeaderString(TENANT_HEADER) ?: return
-        val businessId = tenantHeader.toLongOrNull()
-            ?: throw UnauthorizedException("Invalid tenant identifier")
-
-        val business: Business = businessRepository.findById(businessId)
-            ?: throw UnauthorizedException("Tenant not found")
-
-        if (!business.active) {
-            throw UnauthorizedException("Tenant is inactive")
+        // Try JWT claim first
+        val businessClaim = jwt.getClaim<String>("businessId")
+        if (businessClaim != null) {
+            tenantContext.businessId = UUID.fromString(businessClaim)
+            tenantContext.userId = UUID.fromString(jwt.subject)
+            return
         }
 
-        tenantContext.businessId = businessId
+        // Fallback to header (for public endpoints)
+        val tenantHeader = requestContext.getHeaderString(TENANT_HEADER) ?: return
+        try {
+            tenantContext.businessId = UUID.fromString(tenantHeader)
+        } catch (e: IllegalArgumentException) {
+            throw UnauthorizedException("Invalid tenant identifier")
+        }
     }
 }

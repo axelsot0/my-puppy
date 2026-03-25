@@ -7,6 +7,7 @@ import com.mypuppy.domain.repository.ServiceRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import java.math.BigDecimal
+import java.util.UUID
 
 @ApplicationScoped
 class ServiceService(
@@ -14,17 +15,17 @@ class ServiceService(
     private val businessRepository: BusinessRepository
 ) {
 
-    fun findById(id: Long): Service {
+    fun findById(id: UUID): Service {
         return serviceRepository.findById(id)
             ?: throw NotFoundException("Service", id)
     }
 
-    fun findByBusinessId(businessId: Long): List<Service> {
+    fun findByBusinessId(businessId: UUID): List<Service> {
         return serviceRepository.findByBusinessId(businessId)
     }
 
     @Transactional
-    fun create(businessId: Long, name: String, description: String?, price: BigDecimal, durationMinutes: Int): Service {
+    fun create(businessId: UUID, name: String, description: String?, price: BigDecimal, durationMinutes: Int): Service {
         val business = businessRepository.findById(businessId)
             ?: throw NotFoundException("Business", businessId)
 
@@ -41,7 +42,7 @@ class ServiceService(
     }
 
     @Transactional
-    fun update(id: Long, name: String?, description: String?, price: BigDecimal?, durationMinutes: Int?): Service {
+    fun update(id: UUID, name: String?, description: String?, price: BigDecimal?, durationMinutes: Int?): Service {
         val service = findById(id)
 
         name?.let { service.name = it }
@@ -53,7 +54,7 @@ class ServiceService(
     }
 
     @Transactional
-    fun deactivate(id: Long): Service {
+    fun deactivate(id: UUID): Service {
         val service = findById(id)
         service.active = false
         return service

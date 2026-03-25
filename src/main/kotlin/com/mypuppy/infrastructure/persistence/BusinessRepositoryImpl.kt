@@ -10,4 +10,8 @@ class BusinessRepositoryImpl : BusinessRepository {
     override fun findByActive(active: Boolean): List<Business> {
         return list("active", active)
     }
+
+    override fun findBySlug(slug: String): Business? {
+        return find("slug", slug).firstResult()
+    }
 }

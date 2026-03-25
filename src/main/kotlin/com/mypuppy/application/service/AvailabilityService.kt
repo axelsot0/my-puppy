@@ -10,6 +10,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import java.time.DayOfWeek
 import java.time.LocalTime
+import java.util.UUID
 
 @ApplicationScoped
 class AvailabilityService(
@@ -17,12 +18,12 @@ class AvailabilityService(
     private val userRepository: UserRepository
 ) {
 
-    fun findByEmployeeId(employeeId: Long): List<Availability> {
+    fun findByEmployeeId(employeeId: UUID): List<Availability> {
         return availabilityRepository.findByEmployeeId(employeeId)
     }
 
     @Transactional
-    fun create(employeeId: Long, dayOfWeek: DayOfWeek, startTime: LocalTime, endTime: LocalTime): Availability {
+    fun create(employeeId: UUID, dayOfWeek: DayOfWeek, startTime: LocalTime, endTime: LocalTime): Availability {
         val employee = userRepository.findById(employeeId)
             ?: throw NotFoundException("Employee", employeeId)
 
@@ -46,7 +47,7 @@ class AvailabilityService(
     }
 
     @Transactional
-    fun update(id: Long, dayOfWeek: DayOfWeek?, startTime: LocalTime?, endTime: LocalTime?): Availability {
+    fun update(id: UUID, dayOfWeek: DayOfWeek?, startTime: LocalTime?, endTime: LocalTime?): Availability {
         val availability = availabilityRepository.findById(id)
             ?: throw NotFoundException("Availability", id)
 
@@ -62,7 +63,7 @@ class AvailabilityService(
     }
 
     @Transactional
-    fun delete(id: Long): Boolean {
+    fun delete(id: UUID): Boolean {
         return availabilityRepository.deleteById(id)
     }
 }

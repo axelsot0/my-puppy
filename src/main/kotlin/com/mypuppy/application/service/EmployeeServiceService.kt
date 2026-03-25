@@ -1,15 +1,16 @@
 package com.mypuppy.application.service
 
 import com.mypuppy.domain.exception.DuplicateException
+import com.mypuppy.domain.exception.InvalidOperationException
 import com.mypuppy.domain.exception.NotFoundException
 import com.mypuppy.domain.model.EmployeeService
 import com.mypuppy.domain.model.Role
-import com.mypuppy.domain.exception.InvalidOperationException
 import com.mypuppy.domain.repository.EmployeeServiceRepository
 import com.mypuppy.domain.repository.ServiceRepository
 import com.mypuppy.domain.repository.UserRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
+import java.util.UUID
 
 @ApplicationScoped
 class EmployeeServiceService(
@@ -18,12 +19,12 @@ class EmployeeServiceService(
     private val serviceRepository: ServiceRepository
 ) {
 
-    fun findByEmployeeId(employeeId: Long): List<EmployeeService> {
+    fun findByEmployeeId(employeeId: UUID): List<EmployeeService> {
         return employeeServiceRepository.findByEmployeeId(employeeId)
     }
 
     @Transactional
-    fun assign(employeeId: Long, serviceId: Long) {
+    fun assign(employeeId: UUID, serviceId: UUID) {
         val employee = userRepository.findById(employeeId)
             ?: throw NotFoundException("Employee", employeeId)
 
@@ -50,11 +51,11 @@ class EmployeeServiceService(
     }
 
     @Transactional
-    fun remove(employeeId: Long, serviceId: Long) {
+    fun remove(employeeId: UUID, serviceId: UUID) {
         val assignment = employeeServiceRepository.findByEmployeeId(employeeId)
             .find { it.service.id == serviceId }
             ?: throw NotFoundException("Assignment", "$employeeId-$serviceId")
 
-        employeeServiceRepository.deleteById(assignment.id!!)
+        employeeServiceRepository.deleteById(assignment.id)
     }
 }

@@ -2,13 +2,14 @@ package com.mypuppy.domain.model
 
 import jakarta.persistence.*
 import java.time.LocalDateTime
+import java.util.UUID
 
 @MappedSuperclass
 abstract class BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
+    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
+    var id: UUID = UUID.randomUUID()
 
     @Column(nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now()

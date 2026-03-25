@@ -4,7 +4,7 @@ import jakarta.persistence.*
 import jakarta.validation.constraints.NotBlank
 
 @Entity
-@Table(name = "businesses")
+@Table(name = "businesses", uniqueConstraints = [UniqueConstraint(columnNames = ["slug"])])
 class Business : BaseEntity() {
 
     @field:NotBlank
@@ -12,7 +12,7 @@ class Business : BaseEntity() {
     var name: String = ""
 
     @field:NotBlank
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     var slug: String = ""
 
     @field:NotBlank

@@ -11,6 +11,7 @@ import com.mypuppy.domain.repository.UserRepository
 import io.quarkus.elytron.security.common.BcryptUtil
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
+import java.util.UUID
 
 @ApplicationScoped
 class UserService(
@@ -18,22 +19,22 @@ class UserService(
     private val businessRepository: BusinessRepository
 ) {
 
-    fun findById(id: Long): User {
+    fun findById(id: UUID): User {
         return userRepository.findById(id)
             ?: throw NotFoundException("User", id)
     }
 
-    fun findByEmailAndBusiness(email: String, businessId: Long): User? {
+    fun findByEmailAndBusiness(email: String, businessId: UUID): User? {
         return userRepository.findByEmailAndBusinessId(email, businessId)
     }
 
-    fun listByBusinessAndRole(businessId: Long, role: Role): List<User> {
+    fun listByBusinessAndRole(businessId: UUID, role: Role): List<User> {
         return userRepository.findByBusinessIdAndRole(businessId, role)
     }
 
     @Transactional
     fun register(
-        businessId: Long,
+        businessId: UUID,
         email: String,
         firstName: String,
         lastName: String,
@@ -69,7 +70,7 @@ class UserService(
     }
 
     @Transactional
-    fun update(id: Long, firstName: String?, lastName: String?, rawPassword: String?): User {
+    fun update(id: UUID, firstName: String?, lastName: String?, rawPassword: String?): User {
         val user = findById(id)
 
         firstName?.let { user.firstName = it }
@@ -80,7 +81,7 @@ class UserService(
     }
 
     @Transactional
-    fun deactivate(id: Long): User {
+    fun deactivate(id: UUID): User {
         val user = findById(id)
         user.active = false
         return user

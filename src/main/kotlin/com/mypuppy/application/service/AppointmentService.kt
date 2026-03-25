@@ -2,8 +2,6 @@ package com.mypuppy.application.service
 
 import com.mypuppy.domain.exception.InvalidOperationException
 import com.mypuppy.domain.exception.NotFoundException
-import com.mypuppy.domain.exception.SlotNotAvailableException
-import com.mypuppy.domain.exception.SlotOverlapException
 import com.mypuppy.domain.model.Appointment
 import com.mypuppy.domain.model.AppointmentStatus
 import com.mypuppy.domain.model.User
@@ -16,6 +14,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.UUID
 
 @ApplicationScoped
 class AppointmentService(
@@ -26,21 +25,21 @@ class AppointmentService(
     private val employeeServiceRepository: EmployeeServiceRepository
 ) {
 
-    fun findById(id: Long): Appointment {
+    fun findById(id: UUID): Appointment {
         return appointmentRepository.findById(id)
             ?: throw NotFoundException("Appointment", id)
     }
 
-    fun findByClientId(clientId: Long): List<Appointment> {
+    fun findByClientId(clientId: UUID): List<Appointment> {
         return appointmentRepository.findByClientId(clientId)
     }
 
-    fun findByEmployeeIdAndDate(employeeId: Long, date: LocalDate): List<Appointment> {
+    fun findByEmployeeIdAndDate(employeeId: UUID, date: LocalDate): List<Appointment> {
         return appointmentRepository.findByEmployeeIdAndDate(employeeId, date)
     }
 
     @Transactional
-    fun book(clientId: Long, serviceId: Long, date: LocalDate, time: LocalTime, notes: String?, metadata: String?): Appointment {
+    fun book(clientId: UUID, serviceId: UUID, date: LocalDate, time: LocalTime, notes: String?, metadata: String?): Appointment {
         val client = userRepository.findById(clientId)
             ?: throw NotFoundException("Client", clientId)
 
@@ -69,7 +68,7 @@ class AppointmentService(
     }
 
     @Transactional
-    fun assignEmployee(appointmentId: Long, employeeId: Long): Appointment {
+    fun assignEmployee(appointmentId: UUID, employeeId: UUID): Appointment {
         val appointment = findById(appointmentId)
 
         if (appointment.status != AppointmentStatus.REQUESTED) {
@@ -85,7 +84,7 @@ class AppointmentService(
     }
 
     @Transactional
-    fun markDone(id: Long): Appointment {
+    fun markDone(id: UUID): Appointment {
         val appointment = findById(id)
 
         if (appointment.status != AppointmentStatus.ACCEPTED) {
@@ -97,7 +96,7 @@ class AppointmentService(
     }
 
     @Transactional
-    fun reject(id: Long): Appointment {
+    fun reject(id: UUID): Appointment {
         val appointment = findById(id)
 
         if (appointment.status != AppointmentStatus.REQUESTED) {
@@ -109,7 +108,7 @@ class AppointmentService(
     }
 
     @Transactional
-    fun cancel(id: Long): Appointment {
+    fun cancel(id: UUID): Appointment {
         val appointment = findById(id)
 
         if (appointment.status == AppointmentStatus.DONE || appointment.status == AppointmentStatus.REJECTED) {
@@ -120,7 +119,7 @@ class AppointmentService(
         return appointment
     }
 
-    private fun findAvailableEmployee(serviceId: Long, date: LocalDate, time: LocalTime, durationMinutes: Int): User? {
+    private fun findAvailableEmployee(serviceId: UUID, date: LocalDate, time: LocalTime, durationMinutes: Int): User? {
         val endTime = time.plusMinutes(durationMinutes.toLong())
         val dayOfWeek = date.dayOfWeek
 
@@ -128,7 +127,7 @@ class AppointmentService(
             .map { it.employee }
 
         for (employee in employeesForService) {
-            val slots = availabilityRepository.findByEmployeeIdAndDayOfWeek(employee.id!!, dayOfWeek)
+            val slots = availabilityRepository.findByEmployeeIdAndDayOfWeek(employee.id, dayOfWeek)
 
             val isAvailable = slots.any { slot ->
                 !time.isBefore(slot.startTime) && !endTime.isAfter(slot.endTime)
@@ -136,7 +135,7 @@ class AppointmentService(
 
             if (!isAvailable) continue
 
-            val existingAppointments = appointmentRepository.findByEmployeeIdAndDate(employee.id!!, date)
+            val existingAppointments = appointmentRepository.findByEmployeeIdAndDate(employee.id, date)
                 .filter { it.status == AppointmentStatus.ACCEPTED }
 
             val hasOverlap = existingAppointments.any { appt ->

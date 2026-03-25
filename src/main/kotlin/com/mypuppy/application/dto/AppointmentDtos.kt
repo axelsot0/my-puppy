@@ -3,9 +3,10 @@ package com.mypuppy.application.dto
 import com.mypuppy.domain.model.AppointmentStatus
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.UUID
 
 data class BookAppointmentRequest(
-    val serviceId: Long,
+    val serviceId: UUID,
     val date: LocalDate,
     val time: LocalTime,
     val notes: String? = null,
@@ -13,12 +14,12 @@ data class BookAppointmentRequest(
 )
 
 data class AppointmentResponse(
-    val id: Long,
-    val clientId: Long,
+    val id: UUID,
+    val clientId: UUID,
     val clientName: String,
-    val serviceId: Long,
+    val serviceId: UUID,
     val serviceName: String,
-    val employeeId: Long?,
+    val employeeId: UUID?,
     val employeeName: String?,
     val date: LocalDate,
     val time: LocalTime,

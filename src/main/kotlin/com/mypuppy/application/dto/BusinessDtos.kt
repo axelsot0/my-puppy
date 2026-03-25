@@ -1,5 +1,7 @@
 package com.mypuppy.application.dto
 
+import java.util.UUID
+
 data class CreateBusinessRequest(
     val name: String,
     val slug: String,
@@ -10,7 +12,7 @@ data class CreateBusinessRequest(
 )
 
 data class BusinessResponse(
-    val id: Long,
+    val id: UUID,
     val name: String,
     val slug: String,
     val type: String,

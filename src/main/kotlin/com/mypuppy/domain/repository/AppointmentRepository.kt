@@ -2,16 +2,17 @@ package com.mypuppy.domain.repository
 
 import com.mypuppy.domain.model.Appointment
 import com.mypuppy.domain.model.AppointmentStatus
-import io.quarkus.hibernate.orm.panache.kotlin.PanacheRepository
+import io.quarkus.hibernate.orm.panache.kotlin.PanacheRepositoryBase
 import java.time.LocalDate
+import java.util.UUID
 
-interface AppointmentRepository : PanacheRepository<Appointment> {
+interface AppointmentRepository : PanacheRepositoryBase<Appointment, UUID> {
 
-    fun findByClientId(clientId: Long): List<Appointment>
+    fun findByClientId(clientId: UUID): List<Appointment>
 
-    fun findByEmployeeIdAndDate(employeeId: Long, date: LocalDate): List<Appointment>
+    fun findByEmployeeIdAndDate(employeeId: UUID, date: LocalDate): List<Appointment>
 
-    fun findByServiceId(serviceId: Long): List<Appointment>
+    fun findByServiceId(serviceId: UUID): List<Appointment>
 
     fun findByStatus(status: AppointmentStatus): List<Appointment>
 }
