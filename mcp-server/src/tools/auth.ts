@@ -7,7 +7,7 @@ export function registerAuthTools(server: McpServer): void {
   // --- User/Admin Login (tenant-scoped) ---
   server.tool(
     "login",
-    "Request OTP login for a tenant user/admin. Returns a challengeId. The user must check their email for the 6-digit OTP code.",
+    "Request OTP login for a CLIENT or ADMIN user of a specific tenant/business. IMPORTANT: call set_tenant_id first — this endpoint is tenant-scoped. Returns a challengeId. The user must check their email for the 6-digit OTP code. Use platform_login instead if authenticating as SUPER_ADMIN.",
     {
       email: z.string().email().describe("User email address"),
       password: z.string().describe("User password"),
@@ -60,7 +60,7 @@ export function registerAuthTools(server: McpServer): void {
   // --- Register User (tenant-scoped) ---
   server.tool(
     "register",
-    "Register a new client user in the current tenant/business. Password policy: min 8 chars, at least one uppercase, one lowercase, one digit, and one special character.",
+    "Register a new client user in the current tenant/business. Password policy: min 8 chars, at least one uppercase, one lowercase, one digit, and one special character (e.g. Client@2024!).",
     {
       email: z.string().email().describe("User email"),
       firstName: z.string().describe("First name"),
@@ -88,7 +88,7 @@ export function registerAuthTools(server: McpServer): void {
   // --- SuperAdmin Login ---
   server.tool(
     "platform_login",
-    "Request OTP login for a SuperAdmin. Returns a challengeId. No tenant required.",
+    "Request OTP login for a SUPER_ADMIN. No tenant required — do NOT call set_tenant_id before this. Returns a challengeId. Grants access to platform tools (list_businesses, create_business, create_business_admin, etc.). Use login instead for CLIENT or ADMIN users of a specific business.",
     {
       email: z.string().email().describe("SuperAdmin email"),
       password: z.string().describe("SuperAdmin password"),
@@ -141,7 +141,7 @@ export function registerAuthTools(server: McpServer): void {
   // --- Set Tenant ID at runtime ---
   server.tool(
     "set_tenant_id",
-    "Set the tenant ID at runtime. Use this after creating a business to configure subsequent tenant-scoped operations (login, register, etc.).",
+    "Set the active business/tenant context. Must be called before ANY tenant-scoped operation: login (as CLIENT/ADMIN), register, list_services, create_service, list_employees, create_employee, book_appointment, and all other business-specific tools. Not required for platform_login or SUPER_ADMIN platform tools.",
     {
       tenantId: z.string().uuid().describe("The business UUID to use as tenant ID"),
     },
