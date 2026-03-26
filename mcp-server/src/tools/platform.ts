@@ -176,13 +176,13 @@ export function registerPlatformTools(server: McpServer): void {
 
   server.tool(
     "create_business_admin",
-    "Create an admin user for a specific business. Requires SUPER_ADMIN auth.",
+    "Create an admin user for a specific business. Requires SUPER_ADMIN auth. Password policy: min 8 chars, at least one uppercase, one lowercase, one digit, and one special character (e.g. Admin@2024!).",
     {
       businessId: z.string().uuid().describe("Business UUID"),
       email: z.string().email().describe("Admin email"),
       firstName: z.string().describe("Admin first name"),
       lastName: z.string().describe("Admin last name"),
-      password: z.string().describe("Admin password"),
+      password: z.string().describe("Admin password — must have min 8 chars, uppercase, lowercase, digit, and special character (e.g. Admin@2024!)"),
     },
     async ({ businessId, email, firstName, lastName, password }) => {
       try {

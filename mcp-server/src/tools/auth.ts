@@ -60,12 +60,12 @@ export function registerAuthTools(server: McpServer): void {
   // --- Register User (tenant-scoped) ---
   server.tool(
     "register",
-    "Register a new client user in the current tenant/business.",
+    "Register a new client user in the current tenant/business. Password policy: min 8 chars, at least one uppercase, one lowercase, one digit, and one special character.",
     {
       email: z.string().email().describe("User email"),
       firstName: z.string().describe("First name"),
       lastName: z.string().describe("Last name"),
-      password: z.string().describe("Password"),
+      password: z.string().describe("Password — must have min 8 chars, uppercase, lowercase, digit, and special character (e.g. Client@2024!)"),
     },
     async ({ email, firstName, lastName, password }) => {
       try {
