@@ -63,7 +63,14 @@ export async function apiRequest<T>(path: string, options: ApiOptions = {}): Pro
       if (errorJson.error && errorJson.error !== errorJson.message) parts.push(errorJson.error);
       if (errorJson.details) parts.push(typeof errorJson.details === "string" ? errorJson.details : JSON.stringify(errorJson.details));
       if (errorJson.errors) parts.push(typeof errorJson.errors === "string" ? errorJson.errors : JSON.stringify(errorJson.errors));
-      errorMessage = parts.length > 0 ? parts.join(" | ") : text;
+      // Jakarta Bean Validation violations format (Quarkus REST)
+      if (errorJson.violations && Array.isArray(errorJson.violations)) {
+        const violationMessages = errorJson.violations.map((v: { field?: string; message?: string }) =>
+          v.field ? `${v.field}: ${v.message}` : v.message
+        ).filter(Boolean);
+        if (violationMessages.length > 0) parts.push(violationMessages.join(", "));
+      }
+      errorMessage = parts.length > 0 ? parts.join(" | ") : (text || `HTTP ${response.status}`);
     } catch {
       errorMessage = text;
     }

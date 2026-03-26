@@ -71,7 +71,7 @@ export function registerAuthTools(server: McpServer): void {
       try {
         const result = await apiRequest<{ id: string; email: string; firstName: string; lastName: string; role: string }>(
           "/api/auth/register",
-          { method: "POST", body: { email, firstName, lastName, password }, useTenant: true }
+          { method: "POST", body: { email, firstName, lastName, password, authProvider: "LOCAL", providerId: null }, useTenant: true }
         );
         return {
           content: [{
