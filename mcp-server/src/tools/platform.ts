@@ -176,7 +176,7 @@ export function registerPlatformTools(server: McpServer): void {
 
   server.tool(
     "create_business_admin",
-    "Create an admin user for a specific business. Requires SUPER_ADMIN auth. Password policy: min 8 chars, at least one uppercase, one lowercase, one digit, and one special character (e.g. Admin@2024!). Returns: id (UUID), email, firstName, lastName, role: ADMIN. Errors: 400 if email already exists on the platform or password fails policy; 404 if businessId is invalid.",
+    "Create an admin user for a specific business. Requires SUPER_ADMIN auth. The businessId is automatically sent as tenant context — no need to call set_tenant_id first. Password policy: min 8 chars, at least one uppercase, one lowercase, one digit, and one special character (e.g. Admin@2024!). Returns: id (UUID), email, firstName, lastName, role: ADMIN. Errors: 400 if email already exists on the platform or password fails policy; 404 if businessId is invalid.",
     {
       businessId: z.string().uuid().describe("Business UUID"),
       email: z.string().email().describe("Admin email"),
@@ -190,6 +190,7 @@ export function registerPlatformTools(server: McpServer): void {
           method: "POST",
           body: { email, firstName, lastName, password },
           useAuth: true,
+          tenantIdOverride: businessId,
         });
         return {
           content: [{

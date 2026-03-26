@@ -28,17 +28,19 @@ interface ApiOptions {
   body?: unknown;
   useTenant?: boolean;
   useAuth?: boolean;
+  tenantIdOverride?: string;
 }
 
 export async function apiRequest<T>(path: string, options: ApiOptions = {}): Promise<T> {
-  const { method = "GET", body, useTenant = false, useAuth = false } = options;
+  const { method = "GET", body, useTenant = false, useAuth = false, tenantIdOverride } = options;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
-  if (useTenant && tenantId) {
-    headers["X-Tenant-Id"] = tenantId;
+  const effectiveTenantId = tenantIdOverride ?? (useTenant ? tenantId : "");
+  if (effectiveTenantId) {
+    headers["X-Tenant-Id"] = effectiveTenantId;
   }
 
   if (useAuth && authToken) {
