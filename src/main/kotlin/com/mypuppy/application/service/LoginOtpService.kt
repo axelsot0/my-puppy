@@ -8,7 +8,7 @@ import com.mypuppy.domain.model.LoginPrincipalType
 import com.mypuppy.domain.repository.LoginOtpChallengeRepository
 import io.quarkus.elytron.security.common.BcryptUtil
 import io.quarkus.mailer.Mail
-import io.quarkus.mailer.Mailer
+import io.quarkus.mailer.reactive.ReactiveMailer
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.eclipse.microprofile.config.inject.ConfigProperty
@@ -20,7 +20,7 @@ import java.util.UUID
 @ApplicationScoped
 class LoginOtpService(
     private val loginOtpChallengeRepository: LoginOtpChallengeRepository,
-    private val mailer: Mailer,
+    private val reactiveMailer: ReactiveMailer,
     @ConfigProperty(name = "mypuppy.otp.expiration-minutes", defaultValue = "5")
     private val otpExpirationMinutes: Long,
     @ConfigProperty(name = "mypuppy.otp.max-attempts", defaultValue = "5")
@@ -35,12 +35,26 @@ class LoginOtpService(
     private val rateLimitWindowMinutes: Long
 ) {
 
-    @Transactional
     fun createLoginChallenge(
         email: String,
         principalId: UUID,
         principalType: LoginPrincipalType,
         businessId: UUID?
+    ): LoginOtpChallenge {
+        val otp = generateOtpCode()
+        val challenge = persistChallenge(email, principalId, principalType, businessId, otp)
+        log.debugf("OTP for %s: %s", email, otp)
+        sendOtpEmail(email, otp, principalType)
+        return challenge
+    }
+
+    @Transactional
+    fun persistChallenge(
+        email: String,
+        principalId: UUID,
+        principalType: LoginPrincipalType,
+        businessId: UUID?,
+        otp: String
     ): LoginOtpChallenge {
         val since = LocalDateTime.now().minusMinutes(rateLimitWindowMinutes)
         val recentCount = loginOtpChallengeRepository.countRecentByEmail(email, since)
@@ -48,7 +62,6 @@ class LoginOtpService(
             throw TooManyRequestsException("Too many OTP requests. Try again later.")
         }
 
-        val otp = generateOtpCode()
         val challenge = LoginOtpChallenge().apply {
             this.email = email
             this.principalId = principalId
@@ -61,8 +74,6 @@ class LoginOtpService(
         }
 
         loginOtpChallengeRepository.persist(challenge)
-        log.debugf("OTP for %s: %s", email, otp)
-        sendOtpEmail(email, otp, principalType)
         return challenge
     }
 
@@ -121,8 +132,11 @@ class LoginOtpService(
             </html>
         """.trimIndent()
 
-        mailer.send(
+        reactiveMailer.send(
             Mail.withHtml(email, otpMailSubject, html).setFrom(otpMailFrom)
+        ).subscribe().with(
+            { log.infof("OTP email sent to %s", email) },
+            { e -> log.errorf(e, "Failed to send OTP email to %s", email) }
         )
     }
 
