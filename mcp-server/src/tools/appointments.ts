@@ -38,6 +38,7 @@ export function registerAppointmentTools(server: McpServer): void {
           method: "POST",
           body: { serviceId, date, time, notes },
           useAuth: true,
+          useTenant: true,
         });
         return {
           content: [{
@@ -57,7 +58,7 @@ export function registerAppointmentTools(server: McpServer): void {
     {},
     async () => {
       try {
-        const appointments = await apiRequest<AppointmentResponse[]>("/api/appointments/mine", { useAuth: true });
+        const appointments = await apiRequest<AppointmentResponse[]>("/api/appointments/mine", { useAuth: true, useTenant: true });
         if (appointments.length === 0) {
           return { content: [{ type: "text" as const, text: "You have no appointments." }] };
         }
@@ -71,7 +72,7 @@ export function registerAppointmentTools(server: McpServer): void {
 
   server.tool(
     "cancel_appointment",
-    "Cancel an appointment. Available for CLIENT and ADMIN roles.",
+    "Cancel an appointment. Available for CLIENT, ADMIN, and SUPER_ADMIN roles.",
     {
       appointmentId: z.string().uuid().describe("The appointment UUID to cancel"),
     },
@@ -80,6 +81,7 @@ export function registerAppointmentTools(server: McpServer): void {
         const a = await apiRequest<AppointmentResponse>(`/api/appointments/${appointmentId}/cancel`, {
           method: "PUT",
           useAuth: true,
+          useTenant: true,
         });
         return {
           content: [{
@@ -101,7 +103,7 @@ export function registerAppointmentTools(server: McpServer): void {
     },
     async ({ appointmentId }) => {
       try {
-        const a = await apiRequest<AppointmentResponse>(`/api/appointments/${appointmentId}`, { useAuth: true });
+        const a = await apiRequest<AppointmentResponse>(`/api/appointments/${appointmentId}`, { useAuth: true, useTenant: true });
         return { content: [{ type: "text" as const, text: formatAppointment(a) }] };
       } catch (e: unknown) {
         return { content: [{ type: "text" as const, text: `Failed to get appointment: ${(e as Error).message}` }] };

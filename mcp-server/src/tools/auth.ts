@@ -71,7 +71,7 @@ export function registerAuthTools(server: McpServer): void {
       try {
         const result = await apiRequest<{ id: string; email: string; firstName: string; lastName: string; role: string }>(
           "/api/auth/register",
-          { method: "POST", body: { email, firstName, lastName, password, authProvider: "LOCAL", providerId: null }, useTenant: true }
+          { method: "POST", body: { email, firstName, lastName, password, authProvider: "LOCAL" }, useTenant: true }
         );
         return {
           content: [{
@@ -141,7 +141,7 @@ export function registerAuthTools(server: McpServer): void {
   // --- Set Tenant ID at runtime ---
   server.tool(
     "set_tenant_id",
-    "Set the active business/tenant context. Must be called before ANY tenant-scoped operation: login (as CLIENT/ADMIN), register, list_services, create_service, list_employees, create_employee, book_appointment, and all other business-specific tools. Not required for platform_login or SUPER_ADMIN platform tools.",
+    "Set the active business/tenant context. Must be called before ANY tenant-scoped operation: login (as CLIENT/ADMIN), register, list_services, create_service, list_employees, create_employee, book_appointment, and all other business-specific tools. Also required for SUPER_ADMIN when managing business internals (employees, services, appointments, availability) via admin tools. Not required for platform_login or SUPER_ADMIN platform-only tools (list_businesses, create_business, etc.).",
     {
       tenantId: z.string().uuid().describe("The business UUID to use as tenant ID"),
     },

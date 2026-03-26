@@ -56,7 +56,7 @@ export function registerServiceTools(server: McpServer): void {
 
   server.tool(
     "create_service",
-    "Create a new service for the current business. Requires ADMIN auth.",
+    "Create a new service for the current business. Requires ADMIN or SUPER_ADMIN auth.",
     {
       name: z.string().describe("Service name"),
       price: z.number().positive().describe("Service price"),
@@ -69,6 +69,7 @@ export function registerServiceTools(server: McpServer): void {
           method: "POST",
           body: { name, price, durationMinutes, description },
           useAuth: true,
+          useTenant: true,
         });
         return {
           content: [{
@@ -84,7 +85,7 @@ export function registerServiceTools(server: McpServer): void {
 
   server.tool(
     "update_service",
-    "Update an existing service. Requires ADMIN auth. Only provided fields are updated.",
+    "Update an existing service. Requires ADMIN or SUPER_ADMIN auth. Only provided fields are updated.",
     {
       serviceId: z.string().uuid().describe("The service UUID to update"),
       name: z.string().optional().describe("New service name"),
@@ -104,6 +105,7 @@ export function registerServiceTools(server: McpServer): void {
           method: "PUT",
           body,
           useAuth: true,
+          useTenant: true,
         });
         return {
           content: [{
