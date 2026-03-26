@@ -61,3 +61,19 @@ data class UpdateUserRequest(
     val lastName: String? = null,
     val password: String? = null
 )
+
+data class CreateSuperAdminRequest(
+    @field:NotBlank
+    @field:Email
+    val email: String,
+    @field:NotBlank
+    val password: String,
+    @field:NotBlank
+    val name: String
+)
+
+data class SuperAdminResponse(
+    val id: UUID,
+    val email: String,
+    val name: String
+)
