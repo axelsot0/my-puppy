@@ -22,3 +22,6 @@ class InvalidOperationException(message: String) :
 
 class WeakPasswordException(message: String) :
     DomainException(message)
+
+class TooManyRequestsException(message: String) :
+    DomainException(message)

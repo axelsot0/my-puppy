@@ -1,6 +1,7 @@
 package com.mypuppy.application.service
 
 import com.mypuppy.domain.exception.InvalidOperationException
+import com.mypuppy.domain.exception.TooManyRequestsException
 import com.mypuppy.domain.exception.UnauthorizedException
 import com.mypuppy.domain.model.LoginOtpChallenge
 import com.mypuppy.domain.model.LoginPrincipalType
@@ -11,6 +12,7 @@ import io.quarkus.mailer.Mailer
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.eclipse.microprofile.config.inject.ConfigProperty
+import org.jboss.logging.Logger
 import java.security.SecureRandom
 import java.time.LocalDateTime
 import java.util.UUID
@@ -26,7 +28,11 @@ class LoginOtpService(
     @ConfigProperty(name = "mypuppy.otp.mail.from", defaultValue = "no-reply@mypuppy.com")
     private val otpMailFrom: String,
     @ConfigProperty(name = "mypuppy.otp.mail.subject", defaultValue = "Your My Puppy OTP code")
-    private val otpMailSubject: String
+    private val otpMailSubject: String,
+    @ConfigProperty(name = "mypuppy.otp.rate-limit.max-per-window", defaultValue = "5")
+    private val rateLimitMax: Long,
+    @ConfigProperty(name = "mypuppy.otp.rate-limit.window-minutes", defaultValue = "15")
+    private val rateLimitWindowMinutes: Long
 ) {
 
     @Transactional
@@ -36,6 +42,12 @@ class LoginOtpService(
         principalType: LoginPrincipalType,
         businessId: UUID?
     ): LoginOtpChallenge {
+        val since = LocalDateTime.now().minusMinutes(rateLimitWindowMinutes)
+        val recentCount = loginOtpChallengeRepository.countRecentByEmail(email, since)
+        if (recentCount >= rateLimitMax) {
+            throw TooManyRequestsException("Too many OTP requests. Try again later.")
+        }
+
         val otp = generateOtpCode()
         val challenge = LoginOtpChallenge().apply {
             this.email = email
@@ -49,11 +61,12 @@ class LoginOtpService(
         }
 
         loginOtpChallengeRepository.persist(challenge)
+        log.debugf("OTP for %s: %s", email, otp)
         sendOtpEmail(email, otp, principalType)
         return challenge
     }
 
-    @Transactional
+    @Transactional(dontRollbackOn = [UnauthorizedException::class])
     fun verifyChallenge(
         challengeId: UUID,
         otp: String,
@@ -120,5 +133,6 @@ class LoginOtpService(
 
     companion object {
         private val secureRandom = SecureRandom()
+        private val log = Logger.getLogger(LoginOtpService::class.java)
     }
 }
