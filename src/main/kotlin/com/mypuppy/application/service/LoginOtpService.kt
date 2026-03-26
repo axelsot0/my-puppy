@@ -6,9 +6,8 @@ import com.mypuppy.domain.exception.UnauthorizedException
 import com.mypuppy.domain.model.LoginOtpChallenge
 import com.mypuppy.domain.model.LoginPrincipalType
 import com.mypuppy.domain.repository.LoginOtpChallengeRepository
+import com.mypuppy.infrastructure.mail.EmailService
 import io.quarkus.elytron.security.common.BcryptUtil
-import io.quarkus.mailer.Mail
-import io.quarkus.mailer.reactive.ReactiveMailer
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.eclipse.microprofile.config.inject.ConfigProperty
@@ -20,13 +19,11 @@ import java.util.UUID
 @ApplicationScoped
 class LoginOtpService(
     private val loginOtpChallengeRepository: LoginOtpChallengeRepository,
-    private val reactiveMailer: ReactiveMailer,
+    private val emailService: EmailService,
     @ConfigProperty(name = "mypuppy.otp.expiration-minutes", defaultValue = "5")
     private val otpExpirationMinutes: Long,
     @ConfigProperty(name = "mypuppy.otp.max-attempts", defaultValue = "5")
     private val maxAttempts: Int,
-    @ConfigProperty(name = "mypuppy.otp.mail.from", defaultValue = "no-reply@mypuppy.com")
-    private val otpMailFrom: String,
     @ConfigProperty(name = "mypuppy.otp.mail.subject", defaultValue = "Your My Puppy OTP code")
     private val otpMailSubject: String,
     @ConfigProperty(name = "mypuppy.otp.rate-limit.max-per-window", defaultValue = "5")
@@ -132,12 +129,7 @@ class LoginOtpService(
             </html>
         """.trimIndent()
 
-        reactiveMailer.send(
-            Mail.withHtml(email, otpMailSubject, html).setFrom(otpMailFrom)
-        ).subscribe().with(
-            { log.infof("OTP email sent to %s", email) },
-            { e -> log.errorf(e, "Failed to send OTP email to %s", email) }
-        )
+        emailService.sendAsync(email, otpMailSubject, html)
     }
 
     private fun generateOtpCode(): String {
