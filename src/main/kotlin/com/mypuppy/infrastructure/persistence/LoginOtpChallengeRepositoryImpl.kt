@@ -1,0 +1,7 @@
+package com.mypuppy.infrastructure.persistence
+
+import com.mypuppy.domain.repository.LoginOtpChallengeRepository
+import jakarta.enterprise.context.ApplicationScoped
+
+@ApplicationScoped
+class LoginOtpChallengeRepositoryImpl : LoginOtpChallengeRepository

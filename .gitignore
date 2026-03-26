@@ -8,6 +8,9 @@ Desktop.ini
 # Editors
 .vscode/
 .idea/
+
+# Claude Code
+.claude/
 *.swp
 *.swo
 
@@ -25,3 +28,29 @@ build/
 coverage/
 __pycache__/
 *.py[cod]
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+
+# Maven Wrapper
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+
+# Quarkus
+.quarkus/
+
+# JWT Keys
+*.pem
+
+# IDE (Java)
+*.iml
+.project
+.classpath
+.settings/
+bin/

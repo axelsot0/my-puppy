@@ -1,8 +1,31 @@
-# my-puppy
+# My Puppy
 
-Starter repository initialized with basic Git project files.
+Pet grooming and bath appointment REST API built with Quarkus and Kotlin.
 
-## Included files
-- `.gitignore` for common OS/editor/temp files
-- `.gitattributes` to normalize line endings
-- `.editorconfig` for consistent formatting defaults
+## Tech Stack
+- **Quarkus** — Supersonic Subatomic Java framework
+- **Kotlin** — Language
+- **Hibernate ORM with Panache** — ORM
+- **H2** — Dev/test database
+- **PostgreSQL** — Production database
+
+## Prerequisites
+- Java 21+
+
+## Running in Dev Mode
+```bash
+./mvnw quarkus:dev
+```
+
+API available at `http://localhost:8080`
+Swagger UI at `http://localhost:8080/q/swagger-ui`
+
+## Running Tests
+```bash
+./mvnw test
+```
+
+## Building for Production
+```bash
+./mvnw package
+```
