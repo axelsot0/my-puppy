@@ -188,7 +188,7 @@ export function registerPlatformTools(server: McpServer): void {
       try {
         const u = await apiRequest<UserResponse>(`/platform/businesses/${businessId}/admin`, {
           method: "POST",
-          body: { email, firstName, lastName, password },
+          body: { email, firstName, lastName, password, authProvider: "LOCAL", providerId: null },
           useAuth: true,
         });
         return {

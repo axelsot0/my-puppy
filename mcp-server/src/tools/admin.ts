@@ -71,7 +71,7 @@ export function registerAdminTools(server: McpServer): void {
       try {
         const emp = await apiRequest<UserResponse>("/api/employees", {
           method: "POST",
-          body: { email, firstName, lastName, password },
+          body: { email, firstName, lastName, password, authProvider: "LOCAL", providerId: null },
           useAuth: true,
         });
         return {
