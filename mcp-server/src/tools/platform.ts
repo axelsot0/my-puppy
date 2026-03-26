@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { apiRequest } from "../api-client.js";
+import { ApiClient } from "../api-client.js";
 
 interface BusinessResponse {
   id: string;
@@ -27,7 +27,7 @@ interface SuperAdminResponse {
   name: string;
 }
 
-export function registerPlatformTools(server: McpServer): void {
+export function registerPlatformTools(server: McpServer, client: ApiClient): void {
 
   // --- Businesses ---
 
@@ -37,7 +37,7 @@ export function registerPlatformTools(server: McpServer): void {
     {},
     async () => {
       try {
-        const businesses = await apiRequest<BusinessResponse[]>("/platform/businesses", { useAuth: true });
+        const businesses = await client.request<BusinessResponse[]>("/platform/businesses", { useAuth: true });
         if (businesses.length === 0) {
           return { content: [{ type: "text" as const, text: "No businesses found." }] };
         }
@@ -59,7 +59,7 @@ export function registerPlatformTools(server: McpServer): void {
     },
     async ({ businessId }) => {
       try {
-        const b = await apiRequest<BusinessResponse>(`/platform/businesses/${businessId}`, { useAuth: true });
+        const b = await client.request<BusinessResponse>(`/platform/businesses/${businessId}`, { useAuth: true });
         return {
           content: [{
             type: "text" as const,
@@ -85,7 +85,7 @@ export function registerPlatformTools(server: McpServer): void {
     },
     async ({ name, slug, type, description, address, phone }) => {
       try {
-        const b = await apiRequest<BusinessResponse>("/platform/businesses", {
+        const b = await client.request<BusinessResponse>("/platform/businesses", {
           method: "POST",
           body: { name, slug, type, description, address, phone },
           useAuth: true,
@@ -122,7 +122,7 @@ export function registerPlatformTools(server: McpServer): void {
         if (address !== undefined) body.address = address;
         if (phone !== undefined) body.phone = phone;
 
-        const b = await apiRequest<BusinessResponse>(`/platform/businesses/${businessId}`, {
+        const b = await client.request<BusinessResponse>(`/platform/businesses/${businessId}`, {
           method: "PUT",
           body,
           useAuth: true,
@@ -142,7 +142,7 @@ export function registerPlatformTools(server: McpServer): void {
     },
     async ({ businessId }) => {
       try {
-        const b = await apiRequest<BusinessResponse>(`/platform/businesses/${businessId}/deactivate`, {
+        const b = await client.request<BusinessResponse>(`/platform/businesses/${businessId}/deactivate`, {
           method: "PUT",
           useAuth: true,
         });
@@ -161,7 +161,7 @@ export function registerPlatformTools(server: McpServer): void {
     },
     async ({ businessId }) => {
       try {
-        const b = await apiRequest<BusinessResponse>(`/platform/businesses/${businessId}/activate`, {
+        const b = await client.request<BusinessResponse>(`/platform/businesses/${businessId}/activate`, {
           method: "PUT",
           useAuth: true,
         });
@@ -186,7 +186,7 @@ export function registerPlatformTools(server: McpServer): void {
     },
     async ({ businessId, email, firstName, lastName, password }) => {
       try {
-        const u = await apiRequest<UserResponse>(`/platform/businesses/${businessId}/admin`, {
+        const u = await client.request<UserResponse>(`/platform/businesses/${businessId}/admin`, {
           method: "POST",
           body: { email, firstName, lastName, password, authProvider: "LOCAL", providerId: null },
           useAuth: true,
@@ -211,7 +211,7 @@ export function registerPlatformTools(server: McpServer): void {
     {},
     async () => {
       try {
-        const admins = await apiRequest<SuperAdminResponse[]>("/platform/admins", { useAuth: true });
+        const admins = await client.request<SuperAdminResponse[]>("/platform/admins", { useAuth: true });
         if (admins.length === 0) {
           return { content: [{ type: "text" as const, text: "No super admins found." }] };
         }
@@ -233,7 +233,7 @@ export function registerPlatformTools(server: McpServer): void {
     },
     async ({ email, password, name }) => {
       try {
-        const a = await apiRequest<SuperAdminResponse>("/platform/admins", {
+        const a = await client.request<SuperAdminResponse>("/platform/admins", {
           method: "POST",
           body: { email, password, name },
           useAuth: true,
@@ -258,7 +258,7 @@ export function registerPlatformTools(server: McpServer): void {
     },
     async ({ adminId }) => {
       try {
-        await apiRequest<void>(`/platform/admins/${adminId}`, { method: "DELETE", useAuth: true });
+        await client.request<void>(`/platform/admins/${adminId}`, { method: "DELETE", useAuth: true });
         return { content: [{ type: "text" as const, text: `Super admin ${adminId} deleted.` }] };
       } catch (e: unknown) {
         return { content: [{ type: "text" as const, text: `Failed to delete super admin: ${(e as Error).message}` }] };
