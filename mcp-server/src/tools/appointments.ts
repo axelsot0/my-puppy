@@ -21,7 +21,8 @@ function formatAppointment(a: AppointmentResponse): string {
   return `- **${a.serviceName}** on ${a.date} at ${a.time}\n  ID: ${a.id}\n  Status: ${a.status}\n  Client: ${a.clientName}\n  Employee: ${a.employeeName || "Unassigned"}\n  Notes: ${a.notes || "None"}`;
 }
 
-export function registerAppointmentTools(server: McpServer): void {
+/** CLIENT-only appointment tools: book and list own appointments. */
+export function registerClientAppointmentTools(server: McpServer): void {
 
   server.tool(
     "book_appointment",
@@ -69,6 +70,10 @@ export function registerAppointmentTools(server: McpServer): void {
       }
     }
   );
+}
+
+/** Shared appointment tools: cancel and get details. Used by all roles. */
+export function registerAppointmentTools(server: McpServer): void {
 
   server.tool(
     "cancel_appointment",
