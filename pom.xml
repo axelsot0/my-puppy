@@ -81,6 +81,12 @@
             <artifactId>quarkus-mailer</artifactId>
         </dependency>
 
+        <!-- Scheduler -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-scheduler</artifactId>
+        </dependency>
+
         <!-- Security (BCrypt) -->
         <dependency>
             <groupId>io.quarkus</groupId>

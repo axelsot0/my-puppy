@@ -17,6 +17,7 @@ class DomainExceptionMapper : ExceptionMapper<DomainException> {
             is UnauthorizedException -> Response.Status.UNAUTHORIZED
             is InvalidOperationException -> Response.Status.BAD_REQUEST
             is WeakPasswordException -> Response.Status.BAD_REQUEST
+            is TooManyRequestsException -> Response.Status.fromStatusCode(429) ?: Response.Status.BAD_REQUEST
             else -> Response.Status.INTERNAL_SERVER_ERROR
         }
 

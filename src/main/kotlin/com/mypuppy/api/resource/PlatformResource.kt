@@ -3,6 +3,7 @@ package com.mypuppy.api.resource
 import com.mypuppy.application.dto.*
 import com.mypuppy.application.service.AuthService
 import com.mypuppy.application.service.BusinessService
+import com.mypuppy.application.service.SuperAdminService
 import com.mypuppy.application.service.UserService
 import com.mypuppy.domain.model.Role
 import jakarta.annotation.security.PermitAll
@@ -11,6 +12,7 @@ import jakarta.validation.Valid
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+import org.eclipse.microprofile.jwt.JsonWebToken
 import java.util.UUID
 
 @Path("/platform")
@@ -20,7 +22,9 @@ import java.util.UUID
 class PlatformResource(
     private val businessService: BusinessService,
     private val authService: AuthService,
-    private val userService: UserService
+    private val userService: UserService,
+    private val superAdminService: SuperAdminService,
+    private val jwt: JsonWebToken
 ) {
 
     @POST
@@ -118,5 +122,36 @@ class PlatformResource(
         ).toResponse()
 
         return Response.status(Response.Status.CREATED).entity(admin).build()
+    }
+
+    // --- Super Admin Management ---
+
+    @GET
+    @Path("/admins")
+    fun listSuperAdmins(): Response {
+        val admins = superAdminService.listAll().map {
+            SuperAdminResponse(id = it.id, email = it.email, name = it.name)
+        }
+        return Response.ok(admins).build()
+    }
+
+    @POST
+    @Path("/admins")
+    fun createSuperAdmin(@Valid request: CreateSuperAdminRequest): Response {
+        val admin = superAdminService.create(
+            email = request.email,
+            password = request.password,
+            name = request.name
+        )
+        val response = SuperAdminResponse(id = admin.id, email = admin.email, name = admin.name)
+        return Response.status(Response.Status.CREATED).entity(response).build()
+    }
+
+    @DELETE
+    @Path("/admins/{id}")
+    fun deleteSuperAdmin(@PathParam("id") id: UUID): Response {
+        val currentAdminId = UUID.fromString(jwt.subject)
+        superAdminService.delete(id, currentAdminId)
+        return Response.noContent().build()
     }
 }

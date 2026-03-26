@@ -22,9 +22,10 @@ class AuthResource(
 
     @POST
     @Path("/register")
-    fun register(@HeaderParam("X-Tenant-Id") tenantId: UUID, @Valid request: RegisterRequest): Response {
+    fun register(@HeaderParam("X-Tenant-Id") tenantId: UUID?, @Valid request: RegisterRequest): Response {
+        val tenant = tenantId ?: throw com.mypuppy.domain.exception.UnauthorizedException("X-Tenant-Id header is required")
         val user = userService.register(
-            businessId = tenantId,
+            businessId = tenant,
             email = request.email,
             firstName = request.firstName,
             lastName = request.lastName,
@@ -39,8 +40,9 @@ class AuthResource(
 
     @POST
     @Path("/login")
-    fun login(@HeaderParam("X-Tenant-Id") tenantId: UUID, @Valid request: LoginRequest): Response {
-        val challengeId = authService.requestUserLoginOtp(request.email, request.password, tenantId)
+    fun login(@HeaderParam("X-Tenant-Id") tenantId: UUID?, @Valid request: LoginRequest): Response {
+        val tenant = tenantId ?: throw com.mypuppy.domain.exception.UnauthorizedException("X-Tenant-Id header is required")
+        val challengeId = authService.requestUserLoginOtp(request.email, request.password, tenant)
         val response = LoginChallengeResponse(
             challengeId = challengeId,
             message = "OTP sent to email",
@@ -51,8 +53,9 @@ class AuthResource(
 
     @POST
     @Path("/verify-otp")
-    fun verifyOtp(@HeaderParam("X-Tenant-Id") tenantId: UUID, @Valid request: VerifyOtpRequest): Response {
-        val (token, user) = authService.verifyUserLoginOtp(request.challengeId, request.otp, tenantId)
+    fun verifyOtp(@HeaderParam("X-Tenant-Id") tenantId: UUID?, @Valid request: VerifyOtpRequest): Response {
+        val tenant = tenantId ?: throw com.mypuppy.domain.exception.UnauthorizedException("X-Tenant-Id header is required")
+        val (token, user) = authService.verifyUserLoginOtp(request.challengeId, request.otp, tenant)
         val response = AuthResponse(token = token, user = user.toResponse())
         return Response.ok(response).build()
     }

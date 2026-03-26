@@ -122,6 +122,6 @@ class AuthService(
     fun otpExpirationSeconds(): Long = loginOtpService.otpExpirationSeconds()
 
     companion object {
-        val TOKEN_DURATION: Duration = Duration.ofMinutes(5)
+        val TOKEN_DURATION: Duration = Duration.ofMinutes(15)
     }
 }
