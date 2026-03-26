@@ -8,5 +8,7 @@ RUN mvn package -DskipTests -B
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/quarkus-app/ ./quarkus-app/
+COPY docker-entrypoint.sh .
+RUN chmod +x docker-entrypoint.sh
 EXPOSE 8080
-CMD ["java", "-jar", "quarkus-app/quarkus-run.jar"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
