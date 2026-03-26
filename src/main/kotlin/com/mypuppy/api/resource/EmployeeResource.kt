@@ -16,7 +16,7 @@ import java.util.UUID
 @Path("/api/employees")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RolesAllowed("ADMIN")
+@RolesAllowed("ADMIN", "SUPER_ADMIN")
 class EmployeeResource(
     private val userService: UserService,
     private val employeeServiceService: EmployeeServiceService,

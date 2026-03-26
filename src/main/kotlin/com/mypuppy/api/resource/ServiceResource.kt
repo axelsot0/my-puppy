@@ -37,7 +37,7 @@ class ServiceResource(
     }
 
     @POST
-    @RolesAllowed("ADMIN")
+    @RolesAllowed("ADMIN", "SUPER_ADMIN")
     fun create(request: CreateServiceRequest): Response {
         val businessId = tenantContext.requireBusinessId()
 
@@ -54,7 +54,7 @@ class ServiceResource(
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed("ADMIN")
+    @RolesAllowed("ADMIN", "SUPER_ADMIN")
     fun update(@PathParam("id") id: UUID, request: UpdateServiceRequest): Response {
         val service = serviceService.update(
             id = id,
@@ -69,7 +69,7 @@ class ServiceResource(
 
     @DELETE
     @Path("/{id}")
-    @RolesAllowed("ADMIN")
+    @RolesAllowed("ADMIN", "SUPER_ADMIN")
     fun deactivate(@PathParam("id") id: UUID): Response {
         serviceService.deactivate(id)
         return Response.noContent().build()
