@@ -7,6 +7,7 @@ import com.mypuppy.application.service.UserService
 import com.mypuppy.domain.model.Role
 import jakarta.annotation.security.PermitAll
 import jakarta.annotation.security.RolesAllowed
+import jakarta.validation.Valid
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
@@ -25,8 +26,21 @@ class PlatformResource(
     @POST
     @Path("/auth/login")
     @PermitAll
-    fun loginSuperAdmin(request: LoginRequest): Response {
-        val token = authService.loginSuperAdmin(request.email, request.password)
+    fun loginSuperAdmin(@Valid request: LoginRequest): Response {
+        val challengeId = authService.requestSuperAdminLoginOtp(request.email, request.password)
+        val response = LoginChallengeResponse(
+            challengeId = challengeId,
+            message = "OTP sent to email",
+            expiresInSeconds = authService.otpExpirationSeconds()
+        )
+        return Response.accepted(response).build()
+    }
+
+    @POST
+    @Path("/auth/verify-otp")
+    @PermitAll
+    fun verifySuperAdminOtp(@Valid request: VerifyOtpRequest): Response {
+        val token = authService.verifySuperAdminLoginOtp(request.challengeId, request.otp)
         return Response.ok(mapOf("token" to token)).build()
     }
 
@@ -92,7 +106,7 @@ class PlatformResource(
     @Path("/businesses/{businessId}/admin")
     fun createAdmin(
         @PathParam("businessId") businessId: UUID,
-        request: RegisterRequest
+        @Valid request: RegisterRequest
     ): Response {
         val admin = userService.register(
             businessId = businessId,

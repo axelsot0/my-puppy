@@ -5,6 +5,7 @@ import com.mypuppy.application.service.AuthService
 import com.mypuppy.application.service.UserService
 import com.mypuppy.domain.model.Role
 import jakarta.annotation.security.PermitAll
+import jakarta.validation.Valid
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
@@ -21,7 +22,7 @@ class AuthResource(
 
     @POST
     @Path("/register")
-    fun register(@HeaderParam("X-Tenant-Id") tenantId: UUID, request: RegisterRequest): Response {
+    fun register(@HeaderParam("X-Tenant-Id") tenantId: UUID, @Valid request: RegisterRequest): Response {
         val user = userService.register(
             businessId = tenantId,
             email = request.email,
@@ -38,8 +39,20 @@ class AuthResource(
 
     @POST
     @Path("/login")
-    fun login(@HeaderParam("X-Tenant-Id") tenantId: UUID, request: LoginRequest): Response {
-        val (token, user) = authService.loginUser(request.email, request.password, tenantId)
+    fun login(@HeaderParam("X-Tenant-Id") tenantId: UUID, @Valid request: LoginRequest): Response {
+        val challengeId = authService.requestUserLoginOtp(request.email, request.password, tenantId)
+        val response = LoginChallengeResponse(
+            challengeId = challengeId,
+            message = "OTP sent to email",
+            expiresInSeconds = authService.otpExpirationSeconds()
+        )
+        return Response.accepted(response).build()
+    }
+
+    @POST
+    @Path("/verify-otp")
+    fun verifyOtp(@HeaderParam("X-Tenant-Id") tenantId: UUID, @Valid request: VerifyOtpRequest): Response {
+        val (token, user) = authService.verifyUserLoginOtp(request.challengeId, request.otp, tenantId)
         val response = AuthResponse(token = token, user = user.toResponse())
         return Response.ok(response).build()
     }

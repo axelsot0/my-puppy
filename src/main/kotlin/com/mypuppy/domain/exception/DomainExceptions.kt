@@ -19,3 +19,6 @@ class UnauthorizedException(message: String) :
 
 class InvalidOperationException(message: String) :
     DomainException(message)
+
+class WeakPasswordException(message: String) :
+    DomainException(message)

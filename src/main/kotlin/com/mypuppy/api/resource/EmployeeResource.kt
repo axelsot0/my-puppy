@@ -7,6 +7,7 @@ import com.mypuppy.application.service.UserService
 import com.mypuppy.domain.model.Role
 import com.mypuppy.infrastructure.tenant.TenantContext
 import jakarta.annotation.security.RolesAllowed
+import jakarta.validation.Valid
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
@@ -31,7 +32,7 @@ class EmployeeResource(
     }
 
     @POST
-    fun create(request: RegisterRequest): Response {
+    fun create(@Valid request: RegisterRequest): Response {
         val businessId = tenantContext.requireBusinessId()
 
         val employee = userService.register(
