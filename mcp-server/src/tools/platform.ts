@@ -176,13 +176,13 @@ export function registerPlatformTools(server: McpServer): void {
 
   server.tool(
     "create_business_admin",
-    "Create an admin user for a specific business. Requires SUPER_ADMIN auth.",
+    "Create an admin user for a specific business. Requires SUPER_ADMIN auth. Password policy: min 8 chars, at least one uppercase, one lowercase, one digit, and one special character (e.g. Admin@2024!). Returns: id (UUID), email, firstName, lastName, role: ADMIN. Errors: 400 if email already exists on the platform or password fails policy; 404 if businessId is invalid.",
     {
       businessId: z.string().uuid().describe("Business UUID"),
       email: z.string().email().describe("Admin email"),
       firstName: z.string().describe("Admin first name"),
       lastName: z.string().describe("Admin last name"),
-      password: z.string().describe("Admin password"),
+      password: z.string().describe("Admin password — must have min 8 chars, uppercase, lowercase, digit, and special character (e.g. Admin@2024!)"),
     },
     async ({ businessId, email, firstName, lastName, password }) => {
       try {
@@ -225,10 +225,10 @@ export function registerPlatformTools(server: McpServer): void {
 
   server.tool(
     "create_super_admin",
-    "Create a new super admin. Requires SUPER_ADMIN auth.",
+    "Create a new super admin. Requires SUPER_ADMIN auth. Password policy: min 8 chars, at least one uppercase, one lowercase, one digit, and one special character (e.g. Admin@2024!). Returns: id (UUID), email, name. Cannot delete yourself.",
     {
       email: z.string().email().describe("New super admin email"),
-      password: z.string().describe("Password"),
+      password: z.string().describe("Password — must have min 8 chars, uppercase, lowercase, digit, and special character (e.g. Admin@2024!)"),
       name: z.string().describe("Display name"),
     },
     async ({ email, password, name }) => {

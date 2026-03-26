@@ -40,7 +40,7 @@ export function registerAdminTools(server: McpServer): void {
 
   server.tool(
     "list_employees",
-    "List all employees in the current business. Requires ADMIN auth.",
+    "List all employees in the current business. Requires ADMIN auth (must be authenticated via login as a business ADMIN — SUPER_ADMIN token does NOT work here and will return 403). Workflow: call set_tenant_id, then login as business admin, then call this tool.",
     {},
     async () => {
       try {
@@ -242,12 +242,12 @@ export function registerAdminTools(server: McpServer): void {
 
   server.tool(
     "create_availability",
-    "Create an availability slot for an employee. Requires ADMIN or EMPLOYEE auth.",
+    "Create an availability slot for an employee. Requires ADMIN or EMPLOYEE auth. Schema: employeeId (UUID), dayOfWeek (MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY), startTime (HH:mm), endTime (HH:mm). Returns: id, employeeName, dayOfWeek, startTime, endTime.",
     {
       employeeId: z.string().uuid().describe("Employee UUID"),
       dayOfWeek: z.enum(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]).describe("Day of week"),
-      startTime: z.string().describe("Start time (HH:mm)"),
-      endTime: z.string().describe("End time (HH:mm)"),
+      startTime: z.string().describe("Start time (HH:mm), e.g. '09:00'"),
+      endTime: z.string().describe("End time (HH:mm), e.g. '18:00'"),
     },
     async ({ employeeId, dayOfWeek, startTime, endTime }) => {
       try {
