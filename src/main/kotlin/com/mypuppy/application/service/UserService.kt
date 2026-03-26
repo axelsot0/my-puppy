@@ -16,7 +16,8 @@ import java.util.UUID
 @ApplicationScoped
 class UserService(
     private val userRepository: UserRepository,
-    private val businessRepository: BusinessRepository
+    private val businessRepository: BusinessRepository,
+    private val passwordPolicy: PasswordPolicy
 ) {
 
     fun findById(id: UUID): User {
@@ -54,6 +55,10 @@ class UserService(
             throw InvalidOperationException("Password is required for local registration")
         }
 
+        if (authProvider == AuthProvider.LOCAL && rawPassword != null) {
+            passwordPolicy.validate(rawPassword)
+        }
+
         val user = User().apply {
             this.email = email
             this.firstName = firstName
@@ -75,7 +80,12 @@ class UserService(
 
         firstName?.let { user.firstName = it }
         lastName?.let { user.lastName = it }
-        rawPassword?.let { user.password = BcryptUtil.bcryptHash(it) }
+        rawPassword?.let {
+            if (user.authProvider == AuthProvider.LOCAL) {
+                passwordPolicy.validate(it)
+            }
+            user.password = BcryptUtil.bcryptHash(it)
+        }
 
         return user
     }
