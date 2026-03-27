@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { apiRequest, setAuthToken, getTenantId, getAuthToken, getBaseUrl } from "../api-client.js";
+import { ApiClient } from "../api-client.js";
 
-export function registerTenantAuthTools(server: McpServer): void {
+export function registerTenantAuthTools(server: McpServer, client: ApiClient): void {
 
   // --- User/Admin Login (tenant-scoped) ---
   server.tool(
@@ -14,7 +14,7 @@ export function registerTenantAuthTools(server: McpServer): void {
     },
     async ({ email, password }) => {
       try {
-        const result = await apiRequest<{ challengeId: string; message: string; expiresInSeconds: number }>(
+        const result = await client.request<{ challengeId: string; message: string; expiresInSeconds: number }>(
           "/api/auth/login",
           { method: "POST", body: { email, password }, useTenant: true }
         );
@@ -40,11 +40,11 @@ export function registerTenantAuthTools(server: McpServer): void {
     },
     async ({ challengeId, otp }) => {
       try {
-        const result = await apiRequest<{ token: string; user: { id: string; email: string; firstName: string; lastName: string; role: string } }>(
+        const result = await client.request<{ token: string; user: { id: string; email: string; firstName: string; lastName: string; role: string } }>(
           "/api/auth/verify-otp",
           { method: "POST", body: { challengeId, otp }, useTenant: true }
         );
-        setAuthToken(result.token);
+        client.setAuthToken(result.token);
         return {
           content: [{
             type: "text" as const,
@@ -69,7 +69,7 @@ export function registerTenantAuthTools(server: McpServer): void {
     },
     async ({ email, firstName, lastName, password }) => {
       try {
-        const result = await apiRequest<{ id: string; email: string; firstName: string; lastName: string; role: string }>(
+        const result = await client.request<{ id: string; email: string; firstName: string; lastName: string; role: string }>(
           "/api/auth/register",
           { method: "POST", body: { email, firstName, lastName, password, authProvider: "LOCAL" }, useTenant: true }
         );
@@ -91,12 +91,12 @@ export function registerTenantAuthTools(server: McpServer): void {
     "Show the current MCP server configuration (API URL, tenant ID, auth status).",
     {},
     async () => {
-      const tid = getTenantId();
-      const token = getAuthToken();
+      const tid = client.getTenantId();
+      const token = client.getAuthToken();
       return {
         content: [{
           type: "text" as const,
-          text: `MCP Server Config (Tenant Mode):\n- API Base URL: ${getBaseUrl()}\n- Tenant ID: ${tid || "(not set)"}\n- Authenticated: ${token ? "yes (token present)" : "no"}`,
+          text: `MCP Server Config (Tenant Mode):\n- API Base URL: ${client.getBaseUrl()}\n- Tenant ID: ${tid || "(not set)"}\n- Authenticated: ${token ? "yes (token present)" : "no"}`,
         }],
       };
     }

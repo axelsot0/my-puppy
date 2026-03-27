@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { apiRequest } from "../api-client.js";
+import { ApiClient } from "../api-client.js";
 
 interface AppointmentResponse {
   id: string;
@@ -22,7 +22,7 @@ function formatAppointment(a: AppointmentResponse): string {
 }
 
 /** CLIENT-only appointment tools: book and list own appointments. */
-export function registerClientAppointmentTools(server: McpServer): void {
+export function registerClientAppointmentTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "book_appointment",
@@ -35,7 +35,7 @@ export function registerClientAppointmentTools(server: McpServer): void {
     },
     async ({ serviceId, date, time, notes }) => {
       try {
-        const a = await apiRequest<AppointmentResponse>("/api/appointments", {
+        const a = await client.request<AppointmentResponse>("/api/appointments", {
           method: "POST",
           body: { serviceId, date, time, notes },
           useAuth: true,
@@ -59,7 +59,7 @@ export function registerClientAppointmentTools(server: McpServer): void {
     {},
     async () => {
       try {
-        const appointments = await apiRequest<AppointmentResponse[]>("/api/appointments/mine", { useAuth: true, useTenant: true });
+        const appointments = await client.request<AppointmentResponse[]>("/api/appointments/mine", { useAuth: true, useTenant: true });
         if (appointments.length === 0) {
           return { content: [{ type: "text" as const, text: "You have no appointments." }] };
         }
@@ -73,7 +73,7 @@ export function registerClientAppointmentTools(server: McpServer): void {
 }
 
 /** Shared appointment tools: cancel and get details. Used by all roles. */
-export function registerAppointmentTools(server: McpServer): void {
+export function registerAppointmentTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "cancel_appointment",
@@ -83,7 +83,7 @@ export function registerAppointmentTools(server: McpServer): void {
     },
     async ({ appointmentId }) => {
       try {
-        const a = await apiRequest<AppointmentResponse>(`/api/appointments/${appointmentId}/cancel`, {
+        const a = await client.request<AppointmentResponse>(`/api/appointments/${appointmentId}/cancel`, {
           method: "PUT",
           useAuth: true,
           useTenant: true,
@@ -108,7 +108,7 @@ export function registerAppointmentTools(server: McpServer): void {
     },
     async ({ appointmentId }) => {
       try {
-        const a = await apiRequest<AppointmentResponse>(`/api/appointments/${appointmentId}`, { useAuth: true, useTenant: true });
+        const a = await client.request<AppointmentResponse>(`/api/appointments/${appointmentId}`, { useAuth: true, useTenant: true });
         return { content: [{ type: "text" as const, text: formatAppointment(a) }] };
       } catch (e: unknown) {
         return { content: [{ type: "text" as const, text: `Failed to get appointment: ${(e as Error).message}` }] };

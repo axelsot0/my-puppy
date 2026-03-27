@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { apiRequest } from "../api-client.js";
+import { ApiClient } from "../api-client.js";
 
 interface UserResponse {
   id: string;
@@ -34,7 +34,7 @@ interface AvailabilityResponse {
   endTime: string;
 }
 
-export function registerAdminTools(server: McpServer): void {
+export function registerAdminTools(server: McpServer, client: ApiClient): void {
 
   // --- Employees ---
 
@@ -44,7 +44,7 @@ export function registerAdminTools(server: McpServer): void {
     {},
     async () => {
       try {
-        const employees = await apiRequest<UserResponse[]>("/api/employees", { useAuth: true, useTenant: true });
+        const employees = await client.request<UserResponse[]>("/api/employees", { useAuth: true, useTenant: true });
         if (employees.length === 0) {
           return { content: [{ type: "text" as const, text: "No employees found." }] };
         }
@@ -69,7 +69,7 @@ export function registerAdminTools(server: McpServer): void {
     },
     async ({ email, firstName, lastName, password }) => {
       try {
-        const emp = await apiRequest<UserResponse>("/api/employees", {
+        const emp = await client.request<UserResponse>("/api/employees", {
           method: "POST",
           body: { email, firstName, lastName, password, authProvider: "LOCAL" },
           useAuth: true,
@@ -95,7 +95,7 @@ export function registerAdminTools(server: McpServer): void {
     },
     async ({ employeeId }) => {
       try {
-        await apiRequest<void>(`/api/employees/${employeeId}`, { method: "DELETE", useAuth: true, useTenant: true });
+        await client.request<void>(`/api/employees/${employeeId}`, { method: "DELETE", useAuth: true, useTenant: true });
         return { content: [{ type: "text" as const, text: `Employee ${employeeId} deactivated.` }] };
       } catch (e: unknown) {
         return { content: [{ type: "text" as const, text: `Failed to deactivate employee: ${(e as Error).message}` }] };
@@ -114,7 +114,7 @@ export function registerAdminTools(server: McpServer): void {
     },
     async ({ employeeId, serviceId }) => {
       try {
-        await apiRequest<void>(`/api/employees/${employeeId}/services/${serviceId}`, { method: "POST", useAuth: true, useTenant: true });
+        await client.request<void>(`/api/employees/${employeeId}/services/${serviceId}`, { method: "POST", useAuth: true, useTenant: true });
         return { content: [{ type: "text" as const, text: `Service ${serviceId} assigned to employee ${employeeId}.` }] };
       } catch (e: unknown) {
         return { content: [{ type: "text" as const, text: `Failed to assign service: ${(e as Error).message}` }] };
@@ -134,7 +134,7 @@ export function registerAdminTools(server: McpServer): void {
     async ({ employeeId, date }) => {
       try {
         const query = date ? `?date=${date}` : "";
-        const appointments = await apiRequest<AppointmentResponse[]>(
+        const appointments = await client.request<AppointmentResponse[]>(
           `/api/appointments/employee/${employeeId}${query}`,
           { useAuth: true, useTenant: true }
         );
@@ -160,7 +160,7 @@ export function registerAdminTools(server: McpServer): void {
     },
     async ({ appointmentId, employeeId }) => {
       try {
-        const a = await apiRequest<AppointmentResponse>(
+        const a = await client.request<AppointmentResponse>(
           `/api/appointments/${appointmentId}/assign/${employeeId}`,
           { method: "PUT", useAuth: true, useTenant: true }
         );
@@ -184,7 +184,7 @@ export function registerAdminTools(server: McpServer): void {
     },
     async ({ appointmentId }) => {
       try {
-        const a = await apiRequest<AppointmentResponse>(`/api/appointments/${appointmentId}/reject`, {
+        const a = await client.request<AppointmentResponse>(`/api/appointments/${appointmentId}/reject`, {
           method: "PUT",
           useAuth: true,
           useTenant: true,
@@ -204,7 +204,7 @@ export function registerAdminTools(server: McpServer): void {
     },
     async ({ appointmentId }) => {
       try {
-        const a = await apiRequest<AppointmentResponse>(`/api/appointments/${appointmentId}/done`, {
+        const a = await client.request<AppointmentResponse>(`/api/appointments/${appointmentId}/done`, {
           method: "PUT",
           useAuth: true,
           useTenant: true,
@@ -226,7 +226,7 @@ export function registerAdminTools(server: McpServer): void {
     },
     async ({ employeeId }) => {
       try {
-        const slots = await apiRequest<AvailabilityResponse[]>(
+        const slots = await client.request<AvailabilityResponse[]>(
           `/api/availabilities/employee/${employeeId}`,
           { useAuth: true, useTenant: true }
         );
@@ -254,7 +254,7 @@ export function registerAdminTools(server: McpServer): void {
     },
     async ({ employeeId, dayOfWeek, startTime, endTime }) => {
       try {
-        const s = await apiRequest<AvailabilityResponse>("/api/availabilities", {
+        const s = await client.request<AvailabilityResponse>("/api/availabilities", {
           method: "POST",
           body: { employeeId, dayOfWeek, startTime, endTime },
           useAuth: true,

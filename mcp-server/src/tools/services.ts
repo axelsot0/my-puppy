@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { apiRequest } from "../api-client.js";
+import { ApiClient } from "../api-client.js";
 
 interface ServiceResponse {
   id: string;
@@ -11,7 +11,7 @@ interface ServiceResponse {
   active: boolean;
 }
 
-export function registerServiceTools(server: McpServer): void {
+export function registerServiceTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "list_services",
@@ -19,7 +19,7 @@ export function registerServiceTools(server: McpServer): void {
     {},
     async () => {
       try {
-        const services = await apiRequest<ServiceResponse[]>("/api/services", { useTenant: true });
+        const services = await client.request<ServiceResponse[]>("/api/services", { useTenant: true });
         if (services.length === 0) {
           return { content: [{ type: "text" as const, text: "No services found for this business." }] };
         }
@@ -41,7 +41,7 @@ export function registerServiceTools(server: McpServer): void {
     },
     async ({ serviceId }) => {
       try {
-        const s = await apiRequest<ServiceResponse>(`/api/services/${serviceId}`);
+        const s = await client.request<ServiceResponse>(`/api/services/${serviceId}`);
         return {
           content: [{
             type: "text" as const,
@@ -65,7 +65,7 @@ export function registerServiceTools(server: McpServer): void {
     },
     async ({ name, price, durationMinutes, description }) => {
       try {
-        const s = await apiRequest<ServiceResponse>("/api/services", {
+        const s = await client.request<ServiceResponse>("/api/services", {
           method: "POST",
           body: { name, price, durationMinutes, description },
           useAuth: true,
@@ -101,7 +101,7 @@ export function registerServiceTools(server: McpServer): void {
         if (durationMinutes !== undefined) body.durationMinutes = durationMinutes;
         if (description !== undefined) body.description = description;
 
-        const s = await apiRequest<ServiceResponse>(`/api/services/${serviceId}`, {
+        const s = await client.request<ServiceResponse>(`/api/services/${serviceId}`, {
           method: "PUT",
           body,
           useAuth: true,

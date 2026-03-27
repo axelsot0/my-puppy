@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { apiRequest, setAuthToken, getTenantId, setTenantId, getAuthToken, getBaseUrl } from "../api-client.js";
+import { ApiClient } from "../api-client.js";
 
-export function registerSuperAdminAuthTools(server: McpServer): void {
+export function registerSuperAdminAuthTools(server: McpServer, client: ApiClient): void {
 
   // --- SuperAdmin Login ---
   server.tool(
@@ -14,7 +14,7 @@ export function registerSuperAdminAuthTools(server: McpServer): void {
     },
     async ({ email, password }) => {
       try {
-        const result = await apiRequest<{ challengeId: string; message: string; expiresInSeconds: number }>(
+        const result = await client.request<{ challengeId: string; message: string; expiresInSeconds: number }>(
           "/platform/auth/login",
           { method: "POST", body: { email, password } }
         );
@@ -40,11 +40,11 @@ export function registerSuperAdminAuthTools(server: McpServer): void {
     },
     async ({ challengeId, otp }) => {
       try {
-        const result = await apiRequest<{ token: string }>(
+        const result = await client.request<{ token: string }>(
           "/platform/auth/verify-otp",
           { method: "POST", body: { challengeId, otp } }
         );
-        setAuthToken(result.token);
+        client.setAuthToken(result.token);
         return {
           content: [{
             type: "text" as const,
@@ -65,7 +65,7 @@ export function registerSuperAdminAuthTools(server: McpServer): void {
       tenantId: z.string().uuid().describe("The business UUID to use as tenant ID"),
     },
     async ({ tenantId }) => {
-      setTenantId(tenantId);
+      client.setTenantId(tenantId);
       return {
         content: [{
           type: "text" as const,
@@ -81,12 +81,12 @@ export function registerSuperAdminAuthTools(server: McpServer): void {
     "Show the current MCP server configuration (API URL, tenant ID, auth status).",
     {},
     async () => {
-      const tid = getTenantId();
-      const token = getAuthToken();
+      const tid = client.getTenantId();
+      const token = client.getAuthToken();
       return {
         content: [{
           type: "text" as const,
-          text: `MCP Server Config (SuperAdmin Mode):\n- API Base URL: ${getBaseUrl()}\n- Tenant ID: ${tid || "(not set)"}\n- Authenticated: ${token ? "yes (token present)" : "no"}`,
+          text: `MCP Server Config (SuperAdmin Mode):\n- API Base URL: ${client.getBaseUrl()}\n- Tenant ID: ${tid || "(not set)"}\n- Authenticated: ${token ? "yes (token present)" : "no"}`,
         }],
       };
     }
