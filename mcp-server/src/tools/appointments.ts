@@ -21,7 +21,8 @@ function formatAppointment(a: AppointmentResponse): string {
   return `- **${a.serviceName}** on ${a.date} at ${a.time}\n  ID: ${a.id}\n  Status: ${a.status}\n  Client: ${a.clientName}\n  Employee: ${a.employeeName || "Unassigned"}\n  Notes: ${a.notes || "None"}`;
 }
 
-export function registerAppointmentTools(server: McpServer, client: ApiClient): void {
+/** CLIENT-only appointment tools: book and list own appointments. */
+export function registerClientAppointmentTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "book_appointment",
@@ -38,6 +39,7 @@ export function registerAppointmentTools(server: McpServer, client: ApiClient): 
           method: "POST",
           body: { serviceId, date, time, notes },
           useAuth: true,
+          useTenant: true,
         });
         return {
           content: [{
@@ -57,7 +59,7 @@ export function registerAppointmentTools(server: McpServer, client: ApiClient): 
     {},
     async () => {
       try {
-        const appointments = await client.request<AppointmentResponse[]>("/api/appointments/mine", { useAuth: true });
+        const appointments = await client.request<AppointmentResponse[]>("/api/appointments/mine", { useAuth: true, useTenant: true });
         if (appointments.length === 0) {
           return { content: [{ type: "text" as const, text: "You have no appointments." }] };
         }
@@ -68,10 +70,14 @@ export function registerAppointmentTools(server: McpServer, client: ApiClient): 
       }
     }
   );
+}
+
+/** Shared appointment tools: cancel and get details. Used by all roles. */
+export function registerAppointmentTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "cancel_appointment",
-    "Cancel an appointment. Available for CLIENT and ADMIN roles.",
+    "Cancel an appointment. Available for CLIENT, ADMIN, and SUPER_ADMIN roles.",
     {
       appointmentId: z.string().uuid().describe("The appointment UUID to cancel"),
     },
@@ -80,6 +86,7 @@ export function registerAppointmentTools(server: McpServer, client: ApiClient): 
         const a = await client.request<AppointmentResponse>(`/api/appointments/${appointmentId}/cancel`, {
           method: "PUT",
           useAuth: true,
+          useTenant: true,
         });
         return {
           content: [{
@@ -101,7 +108,7 @@ export function registerAppointmentTools(server: McpServer, client: ApiClient): 
     },
     async ({ appointmentId }) => {
       try {
-        const a = await client.request<AppointmentResponse>(`/api/appointments/${appointmentId}`, { useAuth: true });
+        const a = await client.request<AppointmentResponse>(`/api/appointments/${appointmentId}`, { useAuth: true, useTenant: true });
         return { content: [{ type: "text" as const, text: formatAppointment(a) }] };
       } catch (e: unknown) {
         return { content: [{ type: "text" as const, text: `Failed to get appointment: ${(e as Error).message}` }] };

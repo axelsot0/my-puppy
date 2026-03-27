@@ -40,11 +40,11 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "list_employees",
-    "List all employees in the current business. Requires ADMIN auth (must be authenticated via login as a business ADMIN — SUPER_ADMIN token does NOT work here and will return 403). Workflow: call set_tenant_id, then login as business admin, then call this tool.",
+    "List all employees in the current business. Requires ADMIN or SUPER_ADMIN auth. Workflow: call set_tenant_id first, then call this tool.",
     {},
     async () => {
       try {
-        const employees = await client.request<UserResponse[]>("/api/employees", { useAuth: true });
+        const employees = await client.request<UserResponse[]>("/api/employees", { useAuth: true, useTenant: true });
         if (employees.length === 0) {
           return { content: [{ type: "text" as const, text: "No employees found." }] };
         }
@@ -60,7 +60,7 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "create_employee",
-    "Create a new employee in the current business. Requires ADMIN auth.",
+    "Create a new employee in the current business. Requires ADMIN or SUPER_ADMIN auth.",
     {
       email: z.string().email().describe("Employee email"),
       firstName: z.string().describe("First name"),
@@ -71,8 +71,9 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
       try {
         const emp = await client.request<UserResponse>("/api/employees", {
           method: "POST",
-          body: { email, firstName, lastName, password, authProvider: "LOCAL", providerId: null },
+          body: { email, firstName, lastName, password, authProvider: "LOCAL" },
           useAuth: true,
+          useTenant: true,
         });
         return {
           content: [{
@@ -88,13 +89,13 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "deactivate_employee",
-    "Deactivate an employee. Requires ADMIN auth.",
+    "Deactivate an employee. Requires ADMIN or SUPER_ADMIN auth.",
     {
       employeeId: z.string().uuid().describe("Employee UUID to deactivate"),
     },
     async ({ employeeId }) => {
       try {
-        await client.request<void>(`/api/employees/${employeeId}`, { method: "DELETE", useAuth: true });
+        await client.request<void>(`/api/employees/${employeeId}`, { method: "DELETE", useAuth: true, useTenant: true });
         return { content: [{ type: "text" as const, text: `Employee ${employeeId} deactivated.` }] };
       } catch (e: unknown) {
         return { content: [{ type: "text" as const, text: `Failed to deactivate employee: ${(e as Error).message}` }] };
@@ -106,14 +107,14 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "assign_service_to_employee",
-    "Assign a service to an employee so they can perform it. Requires ADMIN auth.",
+    "Assign a service to an employee so they can perform it. Requires ADMIN or SUPER_ADMIN auth.",
     {
       employeeId: z.string().uuid().describe("Employee UUID"),
       serviceId: z.string().uuid().describe("Service UUID"),
     },
     async ({ employeeId, serviceId }) => {
       try {
-        await client.request<void>(`/api/employees/${employeeId}/services/${serviceId}`, { method: "POST", useAuth: true });
+        await client.request<void>(`/api/employees/${employeeId}/services/${serviceId}`, { method: "POST", useAuth: true, useTenant: true });
         return { content: [{ type: "text" as const, text: `Service ${serviceId} assigned to employee ${employeeId}.` }] };
       } catch (e: unknown) {
         return { content: [{ type: "text" as const, text: `Failed to assign service: ${(e as Error).message}` }] };
@@ -125,7 +126,7 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "employee_appointments",
-    "List appointments for a specific employee on a given date. Requires ADMIN or EMPLOYEE auth.",
+    "List appointments for a specific employee on a given date. Requires ADMIN, EMPLOYEE, or SUPER_ADMIN auth.",
     {
       employeeId: z.string().uuid().describe("Employee UUID"),
       date: z.string().optional().describe("Date (YYYY-MM-DD). Defaults to today."),
@@ -135,7 +136,7 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
         const query = date ? `?date=${date}` : "";
         const appointments = await client.request<AppointmentResponse[]>(
           `/api/appointments/employee/${employeeId}${query}`,
-          { useAuth: true }
+          { useAuth: true, useTenant: true }
         );
         if (appointments.length === 0) {
           return { content: [{ type: "text" as const, text: `No appointments for this employee on ${date || "today"}.` }] };
@@ -152,7 +153,7 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "assign_appointment",
-    "Assign an employee to an appointment. Requires ADMIN auth.",
+    "Assign an employee to an appointment. Requires ADMIN or SUPER_ADMIN auth.",
     {
       appointmentId: z.string().uuid().describe("Appointment UUID"),
       employeeId: z.string().uuid().describe("Employee UUID to assign"),
@@ -161,7 +162,7 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
       try {
         const a = await client.request<AppointmentResponse>(
           `/api/appointments/${appointmentId}/assign/${employeeId}`,
-          { method: "PUT", useAuth: true }
+          { method: "PUT", useAuth: true, useTenant: true }
         );
         return {
           content: [{
@@ -177,7 +178,7 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "reject_appointment",
-    "Reject an appointment. Requires ADMIN auth.",
+    "Reject an appointment. Requires ADMIN or SUPER_ADMIN auth.",
     {
       appointmentId: z.string().uuid().describe("Appointment UUID to reject"),
     },
@@ -186,6 +187,7 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
         const a = await client.request<AppointmentResponse>(`/api/appointments/${appointmentId}/reject`, {
           method: "PUT",
           useAuth: true,
+          useTenant: true,
         });
         return { content: [{ type: "text" as const, text: `Appointment ${appointmentId} rejected. Status: ${a.status}` }] };
       } catch (e: unknown) {
@@ -196,7 +198,7 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "mark_appointment_done",
-    "Mark an appointment as completed. Requires ADMIN or EMPLOYEE auth.",
+    "Mark an appointment as completed. Requires ADMIN, EMPLOYEE, or SUPER_ADMIN auth.",
     {
       appointmentId: z.string().uuid().describe("Appointment UUID to mark as done"),
     },
@@ -205,6 +207,7 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
         const a = await client.request<AppointmentResponse>(`/api/appointments/${appointmentId}/done`, {
           method: "PUT",
           useAuth: true,
+          useTenant: true,
         });
         return { content: [{ type: "text" as const, text: `Appointment ${appointmentId} marked as done. Status: ${a.status}` }] };
       } catch (e: unknown) {
@@ -217,7 +220,7 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "list_availability",
-    "List availability schedule for an employee. Requires ADMIN or EMPLOYEE auth.",
+    "List availability schedule for an employee. Requires ADMIN, EMPLOYEE, or SUPER_ADMIN auth.",
     {
       employeeId: z.string().uuid().describe("Employee UUID"),
     },
@@ -225,7 +228,7 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
       try {
         const slots = await client.request<AvailabilityResponse[]>(
           `/api/availabilities/employee/${employeeId}`,
-          { useAuth: true }
+          { useAuth: true, useTenant: true }
         );
         if (slots.length === 0) {
           return { content: [{ type: "text" as const, text: "No availability configured for this employee." }] };
@@ -242,7 +245,7 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
 
   server.tool(
     "create_availability",
-    "Create an availability slot for an employee. Requires ADMIN or EMPLOYEE auth. Schema: employeeId (UUID), dayOfWeek (MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY), startTime (HH:mm), endTime (HH:mm). Returns: id, employeeName, dayOfWeek, startTime, endTime.",
+    "Create an availability slot for an employee. Requires ADMIN, EMPLOYEE, or SUPER_ADMIN auth. Schema: employeeId (UUID), dayOfWeek (MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY), startTime (HH:mm), endTime (HH:mm). Returns: id, employeeName, dayOfWeek, startTime, endTime.",
     {
       employeeId: z.string().uuid().describe("Employee UUID"),
       dayOfWeek: z.enum(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]).describe("Day of week"),
@@ -255,6 +258,7 @@ export function registerAdminTools(server: McpServer, client: ApiClient): void {
           method: "POST",
           body: { employeeId, dayOfWeek, startTime, endTime },
           useAuth: true,
+          useTenant: true,
         });
         return {
           content: [{

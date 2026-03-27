@@ -31,7 +31,7 @@ class AppointmentResource(
 
     @GET
     @Path("/employee/{employeeId}")
-    @RolesAllowed("ADMIN", "EMPLOYEE")
+    @RolesAllowed("ADMIN", "EMPLOYEE", "SUPER_ADMIN")
     fun listByEmployee(
         @PathParam("employeeId") employeeId: UUID,
         @QueryParam("date") date: LocalDate?
@@ -44,7 +44,7 @@ class AppointmentResource(
 
     @GET
     @Path("/{id}")
-    @RolesAllowed("CLIENT", "ADMIN", "EMPLOYEE")
+    @RolesAllowed("CLIENT", "ADMIN", "EMPLOYEE", "SUPER_ADMIN")
     fun findById(@PathParam("id") id: UUID): Response {
         val appointment = appointmentService.findById(id).toResponse()
         return Response.ok(appointment).build()
@@ -69,7 +69,7 @@ class AppointmentResource(
 
     @PUT
     @Path("/{id}/assign/{employeeId}")
-    @RolesAllowed("ADMIN")
+    @RolesAllowed("ADMIN", "SUPER_ADMIN")
     fun assignEmployee(
         @PathParam("id") id: UUID,
         @PathParam("employeeId") employeeId: UUID
@@ -80,7 +80,7 @@ class AppointmentResource(
 
     @PUT
     @Path("/{id}/done")
-    @RolesAllowed("ADMIN", "EMPLOYEE")
+    @RolesAllowed("ADMIN", "EMPLOYEE", "SUPER_ADMIN")
     fun markDone(@PathParam("id") id: UUID): Response {
         val appointment = appointmentService.markDone(id).toResponse()
         return Response.ok(appointment).build()
@@ -88,7 +88,7 @@ class AppointmentResource(
 
     @PUT
     @Path("/{id}/reject")
-    @RolesAllowed("ADMIN")
+    @RolesAllowed("ADMIN", "SUPER_ADMIN")
     fun reject(@PathParam("id") id: UUID): Response {
         val appointment = appointmentService.reject(id).toResponse()
         return Response.ok(appointment).build()
@@ -96,7 +96,7 @@ class AppointmentResource(
 
     @PUT
     @Path("/{id}/cancel")
-    @RolesAllowed("CLIENT", "ADMIN")
+    @RolesAllowed("CLIENT", "ADMIN", "SUPER_ADMIN")
     fun cancel(@PathParam("id") id: UUID): Response {
         val appointment = appointmentService.cancel(id).toResponse()
         return Response.ok(appointment).build()

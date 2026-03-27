@@ -7,7 +7,7 @@ import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import { ApiClient } from "./api-client.js";
 import { registerAuthTools } from "./tools/auth.js";
 import { registerServiceTools } from "./tools/services.js";
-import { registerAppointmentTools } from "./tools/appointments.js";
+import { registerClientAppointmentTools, registerAppointmentTools } from "./tools/appointments.js";
 import { registerAdminTools } from "./tools/admin.js";
 import { registerPlatformTools } from "./tools/platform.js";
 
@@ -24,6 +24,7 @@ function createSession(): StreamableHTTPServerTransport {
 
   registerAuthTools(server, client);
   registerServiceTools(server, client);
+  registerClientAppointmentTools(server, client);
   registerAppointmentTools(server, client);
   registerAdminTools(server, client);
   registerPlatformTools(server, client);
