@@ -12,7 +12,7 @@ import java.util.UUID
 @Path("/api/availabilities")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RolesAllowed("ADMIN", "EMPLOYEE")
+@RolesAllowed("ADMIN", "EMPLOYEE", "SUPER_ADMIN")
 class AvailabilityResource(
     private val availabilityService: AvailabilityService
 ) {
