@@ -59,8 +59,8 @@ export function registerServiceTools(server: McpServer, client: ApiClient): void
     "Create a new service for the current business. Requires ADMIN or SUPER_ADMIN auth.",
     {
       name: z.string().describe("Service name"),
-      price: z.number().positive().describe("Service price"),
-      durationMinutes: z.number().int().positive().describe("Duration in minutes"),
+      price: z.number().min(0.01).describe("Service price"),
+      durationMinutes: z.number().int().min(1).describe("Duration in minutes"),
       description: z.string().optional().describe("Service description"),
     },
     async ({ name, price, durationMinutes, description }) => {
@@ -89,8 +89,8 @@ export function registerServiceTools(server: McpServer, client: ApiClient): void
     {
       serviceId: z.string().uuid().describe("The service UUID to update"),
       name: z.string().optional().describe("New service name"),
-      price: z.number().positive().optional().describe("New price"),
-      durationMinutes: z.number().int().positive().optional().describe("New duration in minutes"),
+      price: z.number().min(0.01).optional().describe("New price"),
+      durationMinutes: z.number().int().min(1).optional().describe("New duration in minutes"),
       description: z.string().optional().describe("New description"),
     },
     async ({ serviceId, name, price, durationMinutes, description }) => {

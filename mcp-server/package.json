@@ -8,7 +8,9 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "start:tenant": "node dist/index-tenant.js",
-    "start:superadmin": "node dist/index-superadmin.js"
+    "start:tenant-http": "node dist/index-tenant-http.js",
+    "start:superadmin": "node dist/index-superadmin.js",
+    "start:superadmin-http": "node dist/index-superadmin-http.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
