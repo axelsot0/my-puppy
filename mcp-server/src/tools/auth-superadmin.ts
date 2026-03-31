@@ -21,7 +21,7 @@ export function registerSuperAdminAuthTools(server: McpServer, client: ApiClient
         return {
           content: [{
             type: "text" as const,
-            text: `SuperAdmin OTP challenge created.\n- Challenge ID: ${result.challengeId}\n- ${result.message}\n- Expires in: ${result.expiresInSeconds} seconds\n\nAsk the user for the 6-digit OTP code sent to ${email}, then use platform_verify_otp.`,
+            text: `SuperAdmin OTP challenge created.\n- challengeId: ${result.challengeId}\n- Expires in: ${result.expiresInSeconds} seconds\n\nIMPORTANT: Stop here. Tell the user to check their email (${email}) for the 6-digit OTP code and send it. Do NOT call platform_verify_otp until the user provides the code in their next message.`,
           }],
         };
       } catch (e: unknown) {
@@ -48,11 +48,15 @@ export function registerSuperAdminAuthTools(server: McpServer, client: ApiClient
         return {
           content: [{
             type: "text" as const,
-            text: `SuperAdmin login successful! Token stored.\nUse set_tenant_id to select a business before managing its employees, services, or appointments.`,
+            text: `SuperAdmin login successful! Token stored for this session.\nYou can now call list_businesses to see all businesses, or set_tenant_id to manage a specific one.`,
           }],
         };
       } catch (e: unknown) {
-        return { content: [{ type: "text" as const, text: `SuperAdmin OTP verification failed: ${(e as Error).message}` }] };
+        const msg = (e as Error).message;
+        const hint = msg.includes("401")
+          ? "The OTP code was incorrect or has expired. Please call platform_login again to get a new code."
+          : msg;
+        return { content: [{ type: "text" as const, text: `SuperAdmin OTP verification failed: ${hint}` }] };
       }
     }
   );
